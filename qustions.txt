@@ -1,0 +1,27 @@
+Scrum master cert:
+https://scrumquiz.org/scrum-master-practice-test/
+
+CompTIA security+:
+https://trustedinstitute.com/practice/comptia-security-plus/test/
+
+Algortithims:
+Include big O
+Sorting
+Searching
+Graph
+Coding design such as in python, typescript.
+https://www.educative.io/blog/must-know-algorithms-for-coding-interviews
+
+I want a big focus on teaching algorthims.
+
+AWS CERTs:
+
+Azure CERTs:
+
+Computor History:
+Bell labs
+Claude Shannon,
+Apple,
+microsft, 
+Linux
+IBM, 
