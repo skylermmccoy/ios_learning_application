@@ -11,6 +11,7 @@ Read `docs/LESSON_FORMAT.md` first (format, rules, allowed sources), then every 
 Rules:
 - Write in your own words. Never copy sentences from a source. Short, plain, friendly; no filler.
 - Only state facts you are sure of. Run every Python snippet with python3 before using it.
+- Almost every card gets a `visual` (see "Visuals" in docs/LESSON_FORMAT.md): pick the type that shows the idea, use `frames` for anything that happens in steps, and compute every trace, table and plotted point with a script. Check your file with `python3 .claude/scripts/validate_lessons.py <file>`.
 - For every algorithm or operation, state time and space complexity (best/average/worst where they differ).
 - `sources` lists only pages you actually opened (WebFetch) or checked with
   `curl -s -o /dev/null -w "%{http_code}" -L <url>` returning 200. Never guess a URL. Say in your report which sites blocked you.

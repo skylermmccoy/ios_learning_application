@@ -35,6 +35,8 @@ Pass as launch arguments (Scheme → Run → Arguments, or `xcrun simctl launch 
 | --- | --- |
 | `-demo multipleChoice\|fillBlank\|buildCode\|match` | Jump straight into a 10-question timed quiz of that format |
 | `-tab today\|learn\|practice\|mine` | Open that tab |
+| `-tab learn -path sorting` | Open a subject's path |
+| `-tab learn -teach sorting/bubble-sort` | Open one teaching note's cards (the id is `subject/topic`); add `-card 3` to start on the third card |
 
 ## Conventions
 

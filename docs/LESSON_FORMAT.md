@@ -74,7 +74,7 @@ Rules for visuals:
 
 ## Sources
 
-**The owner's books in `references/` come first** (not committed; extract with `build/extract_books.py` into `build/books/`). Cite as title + chapter with no URL, e.g. `{"title": "Grokking Algorithms (Bhargava, 2016), ch. 4"}`. Teach the same ideas in your own words and with your own examples: never copy or closely paraphrase the book's text, figures, exercises or code, and never reuse a practice-test book's questions.
+**The owner's books in `references/` come first** (not committed; extracted to text in `build/books/`, PDFs with pypdf and EPUBs with ebooklib). Cite as title + chapter with no URL, e.g. `{"title": "Grokking Algorithms (Bhargava, 2016), ch. 4"}`. Teach the same ideas in your own words and with your own examples: never copy or closely paraphrase the book's text, figures, exercises or code, and never reuse a practice-test book's questions.
 
 | Book in `references/` | Use for |
 | --- | --- |
@@ -82,7 +82,13 @@ Rules for visuals:
 | NIST SP 800-115 | Security testing techniques (Security Basics, Nmap, Security+) |
 | Penetration Testing Handbook (Molla) | Nmap, Metasploit, Netcat, Security Basics |
 | The Web Application Hacker's Handbook | Web application security (planned subject) |
-| CompTIA A+ Core 1 / Core 2 practice tests | CompTIA A+ (planned subjects; objectives only) |
+| CompTIA A+ Core 1 / Core 2 practice tests (three books) | CompTIA A+ (planned subjects; objectives only, never their questions) |
+| Discrete Mathematics and Its Applications, 8th ed. (Rosen) | Discrete Math, Logic Puzzles |
+| CCNA 200-301 Official Cert Guide, Volume 2 | Servers & Services, Network Protocols, Security Basics |
+| AWS Certified Cloud Practitioner Study Guide (Piper, Clinton); Ultimate AWS CLF-C02 (Kankaria) | AWS |
+| CompTIA Security+ Practice Tests SY0-701 (Seidl) | CompTIA Security+ (objectives only, never its questions) |
+| Python for Data Analysis: the Python crash course (Cannon) | Python |
+| Persistence Best Practices for Java Applications | Java, SQL |
 | CCNA 200-301 Official Cert Guide (the file holds Vol. 1 only) | Network Protocols, Servers & Services |
 | A Mind at Play (Soni, Goodman) | Claude Shannon & Information |
 | Practical Electronics for Inventors | Circuits, Electronic Components, Digital Logic |
