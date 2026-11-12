@@ -1,6 +1,6 @@
 # iOS Learning Application
 
-A SwiftUI study app that turns learning into a game. Short quizzes, a Duolingo-style learning path per subject, spaced-repetition reviews, XP, streaks and combos. It ships with **344 built-in questions across 25 subjects**, with a heavy focus on **algorithms**, and lets you add your own.
+A SwiftUI study app that turns learning into a game. Short quizzes, a Duolingo-style learning path per subject, spaced-repetition reviews, XP, streaks and combos. It ships with **562 built-in questions across 29 subjects**, with a heavy focus on **algorithms**, and lets you add your own.
 
 > Status: early / actively developed. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
@@ -9,7 +9,7 @@ A SwiftUI study app that turns learning into a game. Short quizzes, a Duolingo-s
 | Tab | What it does |
 | --- | --- |
 | **Today** | Daily Challenge (5 mixed questions, same set all day, builds a streak), questions due for review, XP / level, and your weakest subjects. |
-| **Learn** | A level-by-level path for every subject (5 questions per level, 1–3 stars based on hearts left). Easier formats come first, harder ones later. |
+| **Learn** | A path for every subject in three units (Foundations, Core, Advanced). Lessons of 5 questions, a timed review after each unit, and a timed mastery challenge at the end. 1–3 stars based on hearts left. |
 | **Practice** | Free practice and 10-question Timed Tests, by subject or by question format. |
 | **My Stuff** | Questions you created, history of attempts, and weak spots. |
 
@@ -36,7 +36,7 @@ Full details: [`docs/GAMEPLAY.md`](docs/GAMEPLAY.md).
 | --- | --- |
 | Critical Thinking | Logic Puzzles, Spot the Fallacy, Patterns & Sequences, Fact vs Opinion |
 | **Algorithms** | Big O, Sorting, Searching, Graphs, Code Design |
-| Homework | Discrete Math, Python, Bash, zsh, Racket |
+| Homework | Discrete Math, Python, Java, Bash, zsh, Racket, Prolog, Lean 4, Scanners & Parsers |
 | Cybersecurity | Security Basics, Nmap, Metasploit, CVEs & NIST, Port Knocking (knockd), Netcat |
 | Certifications | Scrum Master, CompTIA Security+, AWS, Azure |
 | Computer History | People & Companies |

@@ -5,7 +5,7 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 ## Next up
 
 ### Algorithms (top priority)
-- [ ] Audit current algorithm coverage (Big O 13, Sorting 12, Searching 9, Graphs 11, Code Design 12) against the Educative "must-know algorithms" list in `qustions.txt`; write the gap list to `docs/CONTENT_GAPS.md`.
+- [ ] Audit current algorithm coverage (Big O 31, Sorting 34, Searching 27, Graphs 31, Code Design 12) against the Educative "must-know algorithms" list in `qustions.txt`; write the gap list to `docs/CONTENT_GAPS.md`.
 - [ ] Sorting: bubble, selection, insertion, merge, quick, heap, counting. Add Code Builder + Fill the Blank for each, with best/avg/worst time and space in explanations.
 - [ ] Searching: linear, binary (iterative + recursive), BFS/DFS as search, two pointers, sliding window.
 - [ ] Graphs: BFS, DFS, Dijkstra, topological sort, union-find, cycle detection, MST (Kruskal/Prim).
@@ -21,7 +21,7 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] Computer History: Bell Labs, Claude Shannon, Apple, Microsoft, Linux, IBM; ≥ 6 questions each.
 
 ### App quality
-- [ ] Unit tests for `Question.recordAnswer` (wrong, first correct, due correct, early correct), `GameState`, `Level`, `LearningPath.levels`, `QuestionBank.streak/dailySet`.
+- [ ] Unit tests for `Question.recordAnswer` (wrong, first correct, due correct, early correct), `GameState`, `Level`, `LearningPath.path`, `QuestionBank.streak/dailySet`.
 - [ ] Unit test: all question prompts unique; all `Subject` cases have ≥ 1 question.
 - [ ] Add a CI workflow (`.github/workflows/ci.yml`) that builds and runs unit tests on pull requests (needs a macOS runner with a matching Xcode/SDK; (needs owner) confirm deployment target).
 - [ ] Accessibility pass: Dynamic Type, VoiceOver labels on question views, color-contrast check.
@@ -34,6 +34,10 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] Local notifications for due reviews and streak reminders.
 
 ## Done
+- [x] Deeper learning paths: three difficulty units per subject, timed unit reviews, mastery challenge.
+- [x] Every question labelled with `difficulty` 1–3; bank sorted by subject then difficulty; optional `ref` "read more" links (W3Schools pages checked to exist).
+- [x] New subjects: Java (30), Prolog (26), Lean 4 (8), Scanners & Parsers (20, from the owner's homework in `references/`).
+- [x] +218 questions: Sorting 22, Searching 18, Graphs 20, Big O 18, Python 20, Logic 10, Discrete Math 10, Racket 16, plus the new subjects.
 - [x] Initial app: Today / Learn / Practice / My Stuff, 4 question formats, 344 questions, spaced repetition, XP/levels/streaks.
 - [x] Repo documentation, README and Claude workflow (this PR).
 

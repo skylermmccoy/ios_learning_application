@@ -29,9 +29,14 @@ Level *L* starts at `200 · (L-1) · L` XP: L2 = 400, L3 = 1200, L4 = 2400, L5 =
 
 ## Learning path (`LearningPath`)
 
-- Levels hold 5 questions (`levelSize`).
-- Questions are sorted easy → hard by format: Quick Pick, Match-Up, Fill the Blank, Code Builder; then built-in before user-made, then bank order. Later levels therefore contain harder formats.
-- A final level with fewer than 3 questions is merged into the previous one.
+`LearningPath.path(for:)` turns a subject's questions into an ordered list of `PathLevel`s:
+
+- **Units.** Questions are grouped by `difficulty`: 1 Foundations, 2 Core, 3 Advanced. A unit with fewer than 3 questions joins its neighbour. Questions without a `difficulty` are rated by format (Quick Pick and Match-Up 1, Fill the Blank 2, Code Builder 3).
+- **Lessons.** Inside a unit, questions are sorted by format (Quick Pick, Match-Up, Fill the Blank, Code Builder), then built-in before user-made, then bank order, and cut into lessons of 5 (`levelSize`). A last lesson with fewer than 3 questions is merged into the previous one. Lessons are untimed.
+- **Unit review.** A unit with two or more lessons ends with a timed review of up to 8 questions (`reviewSize`) spread evenly across the unit.
+- **Mastery challenge.** A subject with at least 10 questions and two lessons ends with a timed challenge of 10 questions (`masterySize`) spread across every difficulty.
+- Levels unlock in order. A level is passed by finishing it with at least one heart left.
+- Progress is stored by position on the path, so adding questions to a subject can shift which levels count as completed.
 - Stars = hearts left when the level is finished (1–3). One `LevelProgress` per subject + level.
 - "Weak subjects": at least 5 answers and under 85% correct, weakest first (max 3). "Weak spots": questions with the highest `timesWrong - timesCorrect`.
 
