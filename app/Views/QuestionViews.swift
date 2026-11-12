@@ -30,12 +30,21 @@ struct MultipleChoiceView: View {
     let revealed: Bool
     let onAnswer: (AnswerOutcome) -> Void
     @State private var selected: Int?
+    /// Display order (indices into choices), shuffled once so the answer isn't always in the same spot.
+    @State private var order: [Int]
+
+    init(question: Question, revealed: Bool, onAnswer: @escaping (AnswerOutcome) -> Void) {
+        self.question = question
+        self.revealed = revealed
+        self.onAnswer = onAnswer
+        _order = State(initialValue: Array(question.choices.indices).shuffled())
+    }
 
     var body: some View {
         VStack(spacing: 10) {
             if let code = question.code, !code.isEmpty { CodeBlock(code: code) }
-            ForEach(Array(question.choices.enumerated()), id: \.offset) { i, choice in
-                AnswerButton(letter: String(UnicodeScalar(UInt8(65 + i % 26))), text: choice, state: state(for: i)) {
+            ForEach(Array(order.enumerated()), id: \.offset) { position, i in
+                AnswerButton(letter: String(UnicodeScalar(UInt8(65 + position % 26))), text: question.choices[i], state: state(for: i)) {
                     selected = i
                     onAnswer(AnswerOutcome(correct: i == question.correctIndex))
                 }

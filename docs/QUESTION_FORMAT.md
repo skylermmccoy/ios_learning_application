@@ -17,7 +17,7 @@ Built-in questions live in `app/Data/starter_questions.json`, a JSON array decod
 
 ## Per kind
 
-**multipleChoice**: `choices` (2–4 strings) and `answer` (0-based index of the correct choice).
+**multipleChoice**: `choices` (2–4 strings) and `answer` (0-based index of the correct choice). The app shuffles the choices each time it shows the question, so the stored order doesn't matter.
 
 ```json
 {"subject": "bigO", "prompt": "Binary search on a sorted array is…", "choices": ["O(1)", "O(log n)", "O(n)", "O(n²)"], "answer": 1, "explanation": "Each step halves the search space."}
