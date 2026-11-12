@@ -4,12 +4,20 @@ import Foundation
 enum Subject: String, CaseIterable, Identifiable, Codable {
     // Critical thinking
     case logic, fallacy, patterns, factOpinion
+    // Information theory
+    case informationTheory
     // Algorithms
     case bigO, sorting, searching, graphs, dataStructures, recursion, codeDesign
     // Homework
     case discreteMath, python, java, bash, zsh, racket, prolog, lean4, parsing
     // Cybersecurity
     case cyber, nmap, metasploit, cve, knockd, netcat
+    // Networking
+    case servers, protocols
+    // Computer engineering
+    case circuits, components, digitalLogic
+    // Database
+    case sql
     // Certifications
     case scrum, securityPlus, aws, azure
     // Computer history
@@ -19,9 +27,13 @@ enum Subject: String, CaseIterable, Identifiable, Codable {
 
     enum Category: String, CaseIterable {
         case criticalThinking = "Critical Thinking"
+        case informationTheory = "Information Theory"
         case algorithms = "Algorithms"
         case homework = "Homework"
         case cybersecurity = "Cybersecurity"
+        case networking = "Networking"
+        case computerEngineering = "Computer Engineering"
+        case database = "Database"
         case certifications = "Certifications"
         case history = "Computer History"
     }
@@ -29,6 +41,10 @@ enum Subject: String, CaseIterable, Identifiable, Codable {
     var category: Category {
         switch self {
         case .logic, .fallacy, .patterns, .factOpinion: .criticalThinking
+        case .informationTheory: .informationTheory
+        case .servers, .protocols: .networking
+        case .circuits, .components, .digitalLogic: .computerEngineering
+        case .sql: .database
         case .discreteMath, .python, .java, .bash, .zsh, .racket, .prolog, .lean4, .parsing: .homework
         case .cyber, .nmap, .metasploit, .cve, .knockd, .netcat: .cybersecurity
         case .bigO, .sorting, .searching, .graphs, .dataStructures, .recursion, .codeDesign: .algorithms
@@ -70,6 +86,13 @@ enum Subject: String, CaseIterable, Identifiable, Codable {
         case .aws: "AWS"
         case .azure: "Azure"
         case .history: "People & Companies"
+        case .informationTheory: "Claude Shannon & Information"
+        case .servers: "Servers & Services"
+        case .protocols: "Network Protocols"
+        case .circuits: "Circuits"
+        case .components: "Electronic Components"
+        case .digitalLogic: "Digital Logic"
+        case .sql: "SQL"
         }
     }
 
@@ -107,6 +130,13 @@ enum Subject: String, CaseIterable, Identifiable, Codable {
         case .aws: "cloud"
         case .azure: "cloud.fill"
         case .history: "clock.arrow.circlepath"
+        case .informationTheory: "waveform.path.ecg"
+        case .servers: "server.rack"
+        case .protocols: "network"
+        case .circuits: "bolt"
+        case .components: "memorychip"
+        case .digitalLogic: "cpu"
+        case .sql: "cylinder.split.1x2"
         }
     }
 
@@ -144,6 +174,13 @@ enum Subject: String, CaseIterable, Identifiable, Codable {
         case .aws: "Core services, pricing and shared responsibility."
         case .azure: "Core services, regions and identity."
         case .history: "The people and companies that built computing."
+        case .informationTheory: "Bits, entropy and the man who measured information."
+        case .servers: "DHCP, DNS, NTP and the services a network runs on."
+        case .protocols: "Layers, Ethernet, IP addressing, TCP and UDP."
+        case .circuits: "Voltage, current, resistance and Ohm's law."
+        case .components: "Resistors, capacitors, diodes and transistors."
+        case .digitalLogic: "Binary, logic gates, flip-flops and counters."
+        case .sql: "Query, join, group and design relational tables."
         }
     }
 
@@ -158,6 +195,7 @@ enum Subject: String, CaseIterable, Identifiable, Codable {
         case .bigO, .sorting, .searching, .graphs, .dataStructures, .recursion: base + "dsa/index.php"
         case .cyber, .securityPlus: base + "cybersecurity/index.php"
         case .aws: base + "aws/index.php"
+        case .sql: base + "sql/default.asp"
         default: nil
         }
     }
