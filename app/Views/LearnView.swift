@@ -7,6 +7,9 @@ struct LearnView: View {
     @Query private var progress: [LevelProgress]
     @State private var path: [Subject] = []
     @State private var session: QuizSession?
+    #if DEBUG
+    @State private var previewNote: TeachingNote?
+    #endif
 
     /// The subject offered to someone who hasn't started anything. Algorithms come first for the owner.
     private static let firstSubject: Subject = .bigO
@@ -55,7 +58,12 @@ struct LearnView: View {
             if let raw = UserDefaults.standard.string(forKey: "path"), let s = Subject(rawValue: raw) {
                 path = [s]
             }
+            // `-teach sorting/bubble-sort` opens that note's cards (add `-card 3` to pick a card).
+            if let id = UserDefaults.standard.string(forKey: "teach") {
+                previewNote = LessonLibrary.all.first { $0.id == id }
+            }
         }
+        .sheet(item: $previewNote) { TeachView(subject: $0.subject, notes: [$0]) }
         #endif
     }
 
