@@ -13,7 +13,9 @@ struct LearnView: View {
 
     var body: some View {
         let bySubject = Dictionary(grouping: questions, by: \.subject)
-        let levels = bySubject.mapValues { LearningPath.path(for: $0) }
+        let levels = Dictionary(uniqueKeysWithValues: bySubject.map { subject, qs in
+            (subject, LearningPath.path(for: qs, notes: LessonLibrary.notes(for: subject)))
+        })
         let records = Dictionary(grouping: progress, by: \.subjectRaw)
         let summary = Dictionary(uniqueKeysWithValues: Subject.allCases.map { subject in
             (subject, LearningPath.progress(levelCount: levels[subject]?.count ?? 0,

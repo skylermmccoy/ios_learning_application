@@ -31,6 +31,8 @@ struct QuizView: View {
     @State private var xpBefore = 0
     @State private var finished = false
     @State private var wide = false
+    /// Teaching note opened from the feedback card after a wrong answer.
+    @State private var reviewNote: TeachingNote?
 
     private let ticker = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
@@ -68,6 +70,9 @@ struct QuizView: View {
         .onAppear {
             xpBefore = attempts.reduce(0) { $0 + $1.points }
             if !session.questions.isEmpty { timeLeft = question.kind.timeLimit }
+        }
+        .sheet(item: $reviewNote) { note in
+            TeachView(subject: note.subject, notes: [note])
         }
         .onReceive(ticker) { _ in tick() }
         .sensoryFeedback(.success, trigger: game.correct)
@@ -202,6 +207,14 @@ struct QuizView: View {
                 CodeBlock(code: question.solutionText)
             }
             Text(question.explanation)
+            if !lastCorrect, let note = LessonLibrary.note(subject: question.subject, topic: question.topic) {
+                Button {
+                    reviewNote = note
+                } label: {
+                    Label("Review the lesson: \(note.title)", systemImage: "book.fill")
+                        .font(.subheadline.weight(.medium))
+                }
+            }
             if let link = question.referenceLink {
                 Link(destination: link) {
                     Label("Read more on \(link.host()?.replacingOccurrences(of: "www.", with: "") ?? "the web")",

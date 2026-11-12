@@ -42,13 +42,17 @@ enum LearningPath {
         /// 1-based lesson number within the whole path (0 for reviews and mastery).
         let lessonNumber: Int
         let questions: [Question]
+        /// Teaching-note ids this lesson covers, in order. Empty for reviews, mastery and untaught subjects.
+        var topics: [String] = []
+        /// Lesson name built from its notes' titles. nil = "Lesson N".
+        var name: String? = nil
 
         /// Lessons are untimed so you can think. Reviews and mastery run against the clock.
         var isTimed: Bool { style != .lesson }
 
         var title: String {
             switch style {
-            case .lesson: "Lesson \(lessonNumber)"
+            case .lesson: name ?? "Lesson \(lessonNumber)"
             case .review: "\(LearningPath.unitName(unit)) review"
             case .mastery: "Mastery challenge"
             }
@@ -97,9 +101,19 @@ enum LearningPath {
     /// The full path for one subject, in a stable order:
     /// each unit's lessons (easy formats first), a timed review after any unit with two or more
     /// lessons, and a timed mastery challenge at the end once the subject has enough questions.
-    static func path(for questions: [Question], size: Int = levelSize) -> [PathLevel] {
+    ///
+    /// `notes` are the subject's teaching notes in teaching order. With notes, a unit's questions
+    /// are grouped by topic so each lesson practises what its cards just taught, and lessons are
+    /// named after their notes. Without notes the path is cut purely by format and order.
+    static func path(for questions: [Question], size: Int = levelSize, notes: [TeachingNote] = []) -> [PathLevel] {
+        let rankOf = Dictionary(notes.enumerated().map { ($1.topic, $0) }, uniquingKeysWith: min)
+        let titleOf = Dictionary(notes.map { ($0.topic, $0.title) }, uniquingKeysWith: { a, _ in a })
+        /// Questions with no note (or an unknown topic) go last and are not grouped.
+        func topicRank(_ q: Question) -> Int { q.topic.flatMap { rankOf[$0] } ?? Int.max }
+
         let sorted = questions.sorted {
             if $0.difficulty != $1.difficulty { return $0.difficulty < $1.difficulty }
+            if topicRank($0) != topicRank($1) { return topicRank($0) < topicRank($1) }
             if rank($0.kind) != rank($1.kind) { return rank($0.kind) < rank($1.kind) }
             if $0.isUserCreated != $1.isUserCreated { return !$0.isUserCreated }
             if $0.order != $1.order { return $0.order < $1.order }
@@ -123,15 +137,43 @@ enum LearningPath {
         var path: [PathLevel] = []
         var lessonNumber = 0
         for (unit, qs) in units {
-            var lessons = stride(from: 0, to: qs.count, by: size).map { Array(qs[$0..<min($0 + size, qs.count)]) }
-            // A tiny last lesson isn't worth a node: fold it into the one before.
-            if lessons.count > 1, let last = lessons.last, last.count < 3 {
-                lessons.removeLast()
-                lessons[lessons.count - 1] += last
+            // Split the unit by topic (already contiguous after sorting). A topic with too few
+            // questions for its own lesson shares one with its neighbour.
+            var groups: [[Question]] = []
+            for q in qs {
+                if let last = groups.last?.last, topicRank(last) == topicRank(q) {
+                    groups[groups.count - 1].append(q)
+                } else {
+                    groups.append([q])
+                }
+            }
+            while groups.count > 1, let small = groups.firstIndex(where: { $0.count < 3 }) {
+                if small == 0 {
+                    groups[1] = groups[0] + groups[1]
+                } else {
+                    groups[small - 1] += groups[small]
+                }
+                groups.remove(at: small)
+            }
+
+            var lessons: [[Question]] = []
+            for group in groups {
+                var cut = stride(from: 0, to: group.count, by: size).map { Array(group[$0..<min($0 + size, group.count)]) }
+                // A tiny last lesson isn't worth a node: fold it into the one before.
+                if cut.count > 1, let last = cut.last, last.count < 3 {
+                    cut.removeLast()
+                    cut[cut.count - 1] += last
+                }
+                lessons += cut
             }
             for lesson in lessons {
                 lessonNumber += 1
-                path.append(PathLevel(style: .lesson, unit: unit, lessonNumber: lessonNumber, questions: lesson))
+                var topics: [String] = []
+                for q in lesson {
+                    if let t = q.topic, titleOf[t] != nil, !topics.contains(t) { topics.append(t) }
+                }
+                path.append(PathLevel(style: .lesson, unit: unit, lessonNumber: lessonNumber, questions: lesson,
+                                      topics: topics, name: lessonName(topics.compactMap { titleOf[$0] })))
             }
             if lessons.count >= 2 {
                 path.append(PathLevel(style: .review, unit: unit, lessonNumber: 0,
@@ -143,6 +185,16 @@ enum LearningPath {
                                   questions: spread(sorted, count: masterySize)))
         }
         return path
+    }
+
+    /// "Bubble sort", "Stacks & Queues", "Stacks & more". nil when there is nothing to name it after.
+    static func lessonName(_ titles: [String]) -> String? {
+        switch titles.count {
+        case 0: nil
+        case 1: titles[0]
+        case 2: "\(titles[0]) & \(titles[1])"
+        default: "\(titles[0]) & more"
+        }
     }
 
     /// `count` items taken at even intervals, so a review touches every lesson of its unit.

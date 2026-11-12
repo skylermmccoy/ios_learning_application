@@ -10,9 +10,9 @@ struct PathView: View {
     @Query private var questions: [Question]
     @Query private var progress: [LevelProgress]
     @State private var selected: Selection?
-    /// Set by the level sheet's Start button; the quiz opens once the sheet has gone.
-    @State private var pending: QuizSession?
-    @State private var session: QuizSession?
+    /// Set by the level sheet's buttons; the lesson opens once the sheet has gone.
+    @State private var pending: LessonStart?
+    @State private var lesson: LessonStart?
 
     /// The level whose sheet is showing.
     private struct Selection: Identifiable {
@@ -27,7 +27,8 @@ struct PathView: View {
 
     var body: some View {
         let mine = questions.filter { $0.subject == subject }
-        let levels = LearningPath.path(for: mine)
+        let notes = LessonLibrary.notes(for: subject)
+        let levels = LearningPath.path(for: mine, notes: notes)
         let records = progress.filter { $0.subjectRaw == subject.rawValue }
         let stars = Dictionary(records.filter { $0.level < levels.count }.map { ($0.level, $0.stars) },
                                uniquingKeysWith: max)
@@ -73,18 +74,20 @@ struct PathView: View {
         .navigationTitle(subject.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selected, onDismiss: {
-            session = pending
+            lesson = pending
             pending = nil
         }) { choice in
-            LevelSheet(subject: subject, level: choice.level, bestStars: choice.stars) {
-                pending = QuizSession(title: "\(subject.displayName) · \(choice.level.title)",
-                                      questions: choice.level.questions,
-                                      mode: choice.level.isTimed ? .timed : .level,
-                                      subject: subject, level: choice.index)
+            let levelNotes = LessonLibrary.notes(for: choice.level, in: subject)
+            LevelSheet(subject: subject, level: choice.level, notes: levelNotes, bestStars: choice.stars) { teachFirst in
+                let session = QuizSession(title: "\(subject.displayName) · \(choice.level.title)",
+                                          questions: choice.level.questions,
+                                          mode: choice.level.isTimed ? .timed : .level,
+                                          subject: subject, level: choice.index)
+                pending = LessonStart(session: session, notes: levelNotes, teachFirst: teachFirst)
                 selected = nil
             }
         }
-        .fullScreenCover(item: $session) { QuizView(session: $0) }
+        .fullScreenCover(item: $lesson) { LessonFlowView(start: $0) }
     }
 
     // MARK: Header
@@ -219,6 +222,9 @@ struct PathView: View {
                     Text(level.title)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(locked ? .secondary : .primary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .frame(maxWidth: 170)
                     if let stars {
                         StarRow(filled: stars).font(.caption)
                     } else {
@@ -315,8 +321,11 @@ private struct Trail: View {
 struct LevelSheet: View {
     let subject: Subject
     let level: LearningPath.PathLevel
+    /// Teaching notes for this level. Empty = no cards, the sheet starts the questions directly.
+    let notes: [TeachingNote]
     let bestStars: Int?
-    let start: () -> Void
+    /// `true` = show the teaching cards first.
+    let start: (_ teachFirst: Bool) -> Void
 
     private var tint: Color { level.style == .mastery ? .yellow : subject.color }
 
@@ -343,6 +352,29 @@ struct LevelSheet: View {
                     fact(level.isTimed ? "Timed" : "No clock", label: level.isTimed ? "per question" : "take your time",
                          icon: level.isTimed ? "timer" : "tortoise.fill", color: level.isTimed ? .orange : .green)
                     fact("\(GameState.maxLives)", label: "hearts", icon: "heart.fill", color: .red)
+                }
+
+                if !notes.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("YOU'LL LEARN").font(.caption.bold()).foregroundStyle(.secondary)
+                            .padding(.horizontal, 4)
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(notes) { note in
+                                HStack(spacing: 12) {
+                                    IconBadge(icon: "book.fill", color: subject.color, size: 34)
+                                    Text(note.title).font(.subheadline.weight(.semibold))
+                                    Spacer()
+                                    Text("\(note.cards.count) cards")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.horizontal, 14).padding(.vertical, 10)
+                                .accessibilityElement(children: .combine)
+                                if note.id != notes.last?.id { Divider().padding(.leading, 60) }
+                            }
+                        }
+                        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 18))
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
@@ -379,14 +411,26 @@ struct LevelSheet: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .safeAreaInset(edge: .bottom) {
-            Button(action: start) {
-                Text(bestStars == nil ? "Start" : "Play again")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
+            VStack(spacing: 6) {
+                // Not yet passed: teach first. Passed: play again, with the cards one tap away.
+                let teachIsPrimary = !notes.isEmpty && bestStars == nil
+                Button { start(teachIsPrimary) } label: {
+                    Label(teachIsPrimary ? "Learn first" : bestStars == nil ? "Start" : "Play again",
+                          systemImage: teachIsPrimary ? "book.fill" : "play.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+                .buttonStyle(.glassProminent)
+                .tint(subject.color)
+                if !notes.isEmpty {
+                    Button(teachIsPrimary ? "Skip to questions" : "Review the lesson first") {
+                        start(!teachIsPrimary)
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .tint(subject.color)
+                }
             }
-            .buttonStyle(.glassProminent)
-            .tint(subject.color)
             .padding(.horizontal)
             .padding(.top, 8)
             .padding(.bottom, 8)

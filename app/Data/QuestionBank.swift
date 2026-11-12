@@ -16,13 +16,15 @@ struct StarterQuestion: Decodable {
     let difficulty: Int?
     /// "Read more" link shown after answering.
     let ref: String?
+    /// Id of the teaching note that covers this question (see docs/LESSON_FORMAT.md).
+    let topic: String?
 
     var resolvedKind: QuestionKind { kind ?? .multipleChoice }
 }
 
 enum QuestionBank {
     /// Bump this when starter_questions.json changes so installed apps reload it.
-    static let seedVersion = 7
+    static let seedVersion = 8
 
     static func loadStarter(bundle: Bundle = .main) throws -> [StarterQuestion] {
         guard let url = bundle.url(forResource: "starter_questions", withExtension: "json") else {
@@ -49,6 +51,7 @@ enum QuestionBank {
                     q.order = position
                     q.difficultyRaw = s.difficulty ?? 0
                     q.reference = s.ref
+                    q.topic = s.topic
                     q.subjectRaw = s.subject.rawValue
                     q.kindRaw = s.resolvedKind.rawValue
                     q.choices = s.choices ?? []
@@ -65,6 +68,7 @@ enum QuestionBank {
                     q.order = position
                     q.difficultyRaw = s.difficulty ?? 0
                     q.reference = s.ref
+                    q.topic = s.topic
                     context.insert(q)
                 }
             }
