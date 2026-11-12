@@ -65,6 +65,44 @@ struct appTests {
         #expect(QuestionBank.dueForReview(from: [q], now: day(7)).count == 1)
     }
 
+    @Test func levelsAreChunkedEasyToHard() {
+        func make(_ n: Int, _ kind: QuestionKind, from start: Int) -> [Question] {
+            (0..<n).map { i in
+                let q = Question(subject: .python, kind: kind, prompt: "\(kind.rawValue) \(i)", explanation: "")
+                q.order = start + i
+                return q
+            }
+        }
+        // 12 questions → levels of 5, 5, and a remainder of 2 folded into the last: 5 + 7.
+        let qs = make(4, .buildCode, from: 0) + make(8, .multipleChoice, from: 4)
+        let levels = LearningPath.levels(for: qs.shuffled())
+        #expect(levels.map(\.count) == [5, 7])
+        #expect(levels[0].allSatisfy { $0.kind == .multipleChoice })      // easy format first
+        #expect(levels[0].map(\.order) == [4, 5, 6, 7, 8])                 // stable order
+        #expect(LearningPath.levels(for: []).isEmpty)
+        #expect(LearningPath.levels(for: make(3, .match, from: 0)).map(\.count) == [3])
+
+        #expect(LearningPath.currentLevel(count: 3, completed: []) == 0)
+        #expect(LearningPath.currentLevel(count: 3, completed: [0, 1]) == 2)
+        #expect(LearningPath.currentLevel(count: 3, completed: [0, 1, 2]) == 3)
+    }
+
+    @Test func weakSubjectsAreRankedByAccuracy() {
+        func q(_ subject: Subject, right: Int, wrong: Int) -> Question {
+            let q = Question(subject: subject, prompt: "\(subject.rawValue) \(right) \(wrong)", explanation: "")
+            for _ in 0..<right { q.recordAnswer(correct: true) }
+            for _ in 0..<wrong { q.recordAnswer(correct: false) }
+            return q
+        }
+        let all = [q(.python, right: 9, wrong: 1),      // 90%: fine
+                   q(.bash, right: 3, wrong: 7),        // 30%: weakest
+                   q(.racket, right: 6, wrong: 4),      // 60%
+                   q(.zsh, right: 0, wrong: 2)]         // too few answers to judge
+        let weak = LearningPath.weakSubjects(in: all)
+        #expect(weak.map(\.subject) == [.bash, .racket])
+        #expect(weak.first?.stats.percent == 30)
+    }
+
     @Test func comboMultiplierAndLives() {
         let g = GameState()
         let q = Question(subject: .logic, prompt: "p", explanation: "")
