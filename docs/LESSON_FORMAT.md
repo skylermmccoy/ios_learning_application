@@ -46,9 +46,9 @@ A card needs at least one of `body`, `code`, `bullets`.
 | Penetration Testing Handbook (Molla) | Nmap, Metasploit, Netcat, Security Basics |
 | The Web Application Hacker's Handbook | Web application security (planned subject) |
 | CompTIA A+ Core 1 / Core 2 practice tests | CompTIA A+ (planned subjects; objectives only) |
-| CCNA 200-301 Official Cert Guide | Networking / CCNA (planned subject) |
-| A Mind at Play (Soni, Goodman) | Computer History: Claude Shannon |
-| Practical Electronics for Inventors | Electronics (planned subject) |
+| CCNA 200-301 Official Cert Guide (the file holds Vol. 1 only) | Network Protocols, Servers & Services |
+| A Mind at Play (Soni, Goodman) | Claude Shannon & Information |
+| Practical Electronics for Inventors | Circuits, Electronic Components, Digital Logic |
 | Machine Learning with PyTorch and Scikit-Learn | Machine learning (planned subject) |
 
 ### Websites the owner asked for (secondary)
