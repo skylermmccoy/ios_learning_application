@@ -81,6 +81,11 @@ final class Question {
     var timesCorrect: Int = 0
     var timesWrong: Int = 0
 
+    /// 1 = foundations, 2 = core, 3 = advanced. 0 = not set: falls back to the format.
+    var difficultyRaw: Int = 0
+    /// Optional "read more" link shown after answering.
+    var reference: String?
+
     init(subject: Subject,
          kind: QuestionKind = .multipleChoice,
          prompt: String,
@@ -107,6 +112,21 @@ final class Question {
 
     var subject: Subject { Subject(rawValue: subjectRaw) ?? .logic }
     var kind: QuestionKind { QuestionKind(rawValue: kindRaw) ?? .multipleChoice }
+
+    /// 1–3. Questions without an explicit difficulty are rated by how hard their format is.
+    var difficulty: Int {
+        if (1...3).contains(difficultyRaw) { return difficultyRaw }
+        switch kind {
+        case .multipleChoice, .match: return 1
+        case .fillBlank: return 2
+        case .buildCode: return 3
+        }
+    }
+
+    /// The link to show after answering: the question's own, or its subject's.
+    var referenceLink: URL? {
+        (reference ?? subject.referenceURL).flatMap(URL.init(string:))
+    }
 
     /// Identifies a built-in question across bank updates.
     static func bankKey(prompt: String, code: String?) -> String { prompt + "\u{1}" + (code ?? "") }

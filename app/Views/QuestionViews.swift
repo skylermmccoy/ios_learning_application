@@ -145,6 +145,8 @@ struct BuildCodeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
+            // Surrounding code for context, when the question has some.
+            if let code = question.code, !code.isEmpty { CodeBlock(code: code) }
             Text("Your code").font(.caption).foregroundStyle(.secondary)
             FlowLayout {
                 ForEach(placed) { tile in

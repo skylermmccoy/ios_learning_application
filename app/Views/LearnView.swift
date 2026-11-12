@@ -100,7 +100,7 @@ struct LearnView: View {
 
             VStack(spacing: 0) {
                 ForEach(subjects) { subject in
-                    let total = LearningPath.levels(for: bySubject[subject] ?? []).count
+                    let total = LearningPath.path(for: bySubject[subject] ?? []).count
                     let done = progress.filter { $0.subjectRaw == subject.rawValue && $0.level < total }
                     NavigationLink(value: subject) {
                         HStack(spacing: 12) {
@@ -137,7 +137,8 @@ struct LearnView: View {
     }
 }
 
-/// One subject's levels as a winding path. Finish a level to unlock the next.
+/// One subject's path: three units of lessons, timed reviews, and a final mastery challenge.
+/// Finish a level with a heart left to unlock the next.
 struct PathView: View {
     let subject: Subject
 
@@ -148,8 +149,8 @@ struct PathView: View {
     /// Sideways shift of each node, repeating, so the path winds left and right.
     private static let sway: [CGFloat] = [0, 55, 85, 55, 0, -55, -85, -55]
 
-    private var levels: [[Question]] {
-        LearningPath.levels(for: questions.filter { $0.subject == subject })
+    private var levels: [LearningPath.PathLevel] {
+        LearningPath.path(for: questions.filter { $0.subject == subject })
     }
 
     private var stars: [Int: Int] {
@@ -159,16 +160,20 @@ struct PathView: View {
 
     var body: some View {
         let levels = levels
-        let stars = stars
+        let stars = stars.filter { $0.key < levels.count }
         let current = LearningPath.currentLevel(count: levels.count, completed: Set(stars.keys))
-        let stats = LearningPath.stats(for: levels.flatMap { $0 })
+        let stats = LearningPath.stats(for: questions.filter { $0.subject == subject })
 
         ScrollView {
             VStack(spacing: 22) {
-                header(done: min(current, levels.count), total: levels.count, stats: stats)
+                header(done: min(current, levels.count), total: levels.count,
+                       earned: stars.values.reduce(0, +), stats: stats)
 
                 ForEach(levels.indices, id: \.self) { i in
-                    node(index: i, questions: levels[i], stars: stars[i], isCurrent: i == current,
+                    if i == 0 || levels[i - 1].unit != levels[i].unit {
+                        unitHeader(levels[i].unit, levels: levels, stars: stars)
+                    }
+                    node(index: i, level: levels[i], stars: stars[i], isCurrent: i == current,
                          locked: i > current)
                         .offset(x: Self.sway[i % Self.sway.count])
                 }
@@ -195,13 +200,14 @@ struct PathView: View {
         .fullScreenCover(item: $session) { QuizView(session: $0) }
     }
 
-    private func header(done: Int, total: Int, stats: LearningPath.Stats) -> some View {
+    private func header(done: Int, total: Int, earned: Int, stats: LearningPath.Stats) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(subject.category.rawValue.uppercased(), systemImage: subject.icon)
                 .font(.caption.bold())
                 .opacity(0.85)
             Text(subject.displayName).font(.title.bold())
-            Text("\(done) of \(total) levels" + (stats.answered > 0 ? " · \(stats.percent)% accuracy" : ""))
+            Text("\(done) of \(total) levels · \(earned)/\(total * 3) stars"
+                 + (stats.answered > 0 ? " · \(stats.percent)% accuracy" : ""))
                 .font(.subheadline)
                 .opacity(0.9)
             ProgressView(value: Double(done), total: Double(max(total, 1)))
@@ -211,11 +217,44 @@ struct PathView: View {
         .gradientCard([subject.color, subject.color.opacity(0.65)])
     }
 
-    private func node(index: Int, questions: [Question], stars: Int?, isCurrent: Bool, locked: Bool) -> some View {
-        let fill: Color = locked ? Color(.systemGray4) : subject.color
+    private func unitHeader(_ unit: Int, levels: [LearningPath.PathLevel], stars: [Int: Int]) -> some View {
+        let indices = levels.indices.filter { levels[$0].unit == unit }
+        let done = indices.filter { stars[$0] != nil }.count
+        return HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("UNIT \(unit)").font(.caption2.bold()).foregroundStyle(.secondary)
+                Text(LearningPath.unitName(unit)).font(.headline)
+            }
+            Spacer()
+            Text("\(done)/\(indices.count)")
+                .font(.subheadline.monospacedDigit())
+                .foregroundStyle(done == indices.count ? .green : .secondary)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10)
+        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16))
+        .padding(.top, 6)
+    }
+
+    private func icon(for level: LearningPath.PathLevel, done: Bool, locked: Bool) -> String {
+        if locked { return "lock.fill" }
+        if done { return "checkmark" }
+        switch level.style {
+        case .lesson: return "play.fill"
+        case .review: return "arrow.triangle.2.circlepath"
+        case .mastery: return "crown.fill"
+        }
+    }
+
+    private func node(index: Int, level: LearningPath.PathLevel, stars: Int?, isCurrent: Bool,
+                      locked: Bool) -> some View {
+        let special = level.style != .lesson
+        let fill: Color = locked ? Color(.systemGray4) : level.style == .mastery ? .yellow : subject.color
+        let size: CGFloat = special ? 90 : 78
         return Button {
-            session = QuizSession(title: "\(subject.displayName) · Level \(index + 1)",
-                                  questions: questions, mode: .level, subject: subject, level: index)
+            session = QuizSession(title: "\(subject.displayName) · \(level.title)",
+                                  questions: level.questions,
+                                  mode: level.isTimed ? .timed : .level,
+                                  subject: subject, level: index)
         } label: {
             VStack(spacing: 6) {
                 if isCurrent {
@@ -230,12 +269,12 @@ struct PathView: View {
                     // Darker disc underneath gives the node a raised look.
                     Circle().fill(fill.opacity(0.55)).offset(y: 6)
                     Circle().fill(fill.gradient)
-                    Image(systemName: locked ? "lock.fill" : stars != nil ? "checkmark" : "play.fill")
-                        .font(.system(size: 28, weight: .heavy))
+                    Image(systemName: icon(for: level, done: stars != nil, locked: locked))
+                        .font(.system(size: special ? 32 : 28, weight: .heavy))
                         .foregroundStyle(.white)
                         .symbolEffect(.pulse, isActive: isCurrent)
                 }
-                .frame(width: 78, height: 78)
+                .frame(width: size, height: size)
                 .padding(.bottom, 6)
                 .overlay {
                     if isCurrent {
@@ -243,7 +282,7 @@ struct PathView: View {
                     }
                 }
 
-                Text("Level \(index + 1)").font(.subheadline.weight(.semibold))
+                Text(level.title).font(.subheadline.weight(.semibold))
                 if let stars {
                     HStack(spacing: 2) {
                         ForEach(0..<3, id: \.self) { s in
@@ -253,12 +292,13 @@ struct PathView: View {
                     }
                     .font(.caption)
                 } else {
-                    Text("\(questions.count) questions").font(.caption).foregroundStyle(.secondary)
+                    Text("\(level.questions.count) questions" + (level.isTimed ? " · timed" : ""))
+                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
         }
         .buttonStyle(.plain)
         .disabled(locked)
-        .accessibilityLabel("Level \(index + 1), \(locked ? "locked" : stars != nil ? "completed" : "ready")")
+        .accessibilityLabel("\(level.title), \(locked ? "locked" : stars != nil ? "completed" : "ready")")
     }
 }
