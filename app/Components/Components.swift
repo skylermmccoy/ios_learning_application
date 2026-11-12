@@ -80,6 +80,43 @@ struct AnswerButton: View {
     }
 }
 
+/// Circular progress. `value` is 0 → 1. Put a label on top with an overlay or ZStack.
+struct ProgressRing: View {
+    let value: Double
+    var color: Color = .accentColor
+    var track: Color = Color(.systemFill)
+    var lineWidth: CGFloat = 5
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(track, lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: min(1, max(0, value)))
+                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .animation(.snappy, value: value)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Three stars, `filled` of them gold.
+struct StarRow: View {
+    let filled: Int
+    var empty: Color = .secondary
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(0..<3, id: \.self) { s in
+                Image(systemName: s < filled ? "star.fill" : "star")
+                    .foregroundStyle(s < filled ? Color.yellow : empty)
+            }
+        }
+        .accessibilityElement()
+        .accessibilityLabel("\(filled) of 3 stars")
+    }
+}
+
 /// Countdown bar for timed questions. `fraction` is 1 → 0.
 struct TimerBar: View {
     let fraction: Double

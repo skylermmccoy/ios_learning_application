@@ -1,32 +1,49 @@
 import SwiftUI
 import SwiftData
 
-/// The Learn tab: your weakest areas, then every subject with its level progress.
+/// The Learn tab: pick up where you left off, see your totals, then browse every subject by category.
 struct LearnView: View {
     @Query private var questions: [Question]
     @Query private var progress: [LevelProgress]
     @State private var path: [Subject] = []
     @State private var session: QuizSession?
 
-    private var bySubject: [Subject: [Question]] { Dictionary(grouping: questions, by: \.subject) }
+    /// The subject offered to someone who hasn't started anything. Algorithms come first for the owner.
+    private static let firstSubject: Subject = .bigO
 
     var body: some View {
+        let bySubject = Dictionary(grouping: questions, by: \.subject)
+        let levels = bySubject.mapValues { LearningPath.path(for: $0) }
+        let records = Dictionary(grouping: progress, by: \.subjectRaw)
+        let summary = Dictionary(uniqueKeysWithValues: Subject.allCases.map { subject in
+            (subject, LearningPath.progress(levelCount: levels[subject]?.count ?? 0,
+                                            records: records[subject.rawValue] ?? []))
+        })
+        let weak = LearningPath.weakSubjects(in: questions)
+
         NavigationStack(path: $path) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    improveSection
-                    ForEach(Subject.Category.allCases, id: \.self) { category in
-                        categorySection(category)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        VStack(spacing: 12) {
+                            continueCard(summary: summary, levels: levels)
+                            totals(summary)
+                        }
+                        categoryChips(proxy)
+                        if !weak.isEmpty { improveSection(weak, bySubject: bySubject) }
+                        ForEach(Subject.Category.allCases, id: \.self) { category in
+                            categorySection(category, summary: summary).id(category)
+                        }
+                        if weak.isEmpty { improveHint }
                     }
+                    .padding(.horizontal)
+                    .padding(.bottom, 24)
+                    .frame(maxWidth: 760)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 24)
-                .frame(maxWidth: 700)
-                .frame(maxWidth: .infinity)
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Learn")
-            .navigationSubtitle("\(progress.count) levels completed")
             .navigationDestination(for: Subject.self) { PathView(subject: $0) }
             .fullScreenCover(item: $session) { QuizView(session: $0) }
         }
@@ -40,37 +57,140 @@ struct LearnView: View {
         #endif
     }
 
+    // MARK: Continue
+
+    private func continueCard(summary: [Subject: LearningPath.Progress],
+                              levels: [Subject: [LearningPath.PathLevel]]) -> some View {
+        let resumed = LearningPath.resumeSubject(records: progress, levelCounts: levels.mapValues(\.count))
+        let subject = resumed ?? Self.firstSubject
+        let state = summary[subject] ?? LearningPath.Progress(done: 0, total: 0, stars: 0)
+        let subjectLevels = levels[subject] ?? []
+        let done = Set(progress.filter { $0.subjectRaw == subject.rawValue }.map(\.level))
+        let nextIndex = LearningPath.currentLevel(count: subjectLevels.count, completed: done)
+        let next = subjectLevels.indices.contains(nextIndex) ? subjectLevels[nextIndex] : nil
+
+        return Button { path = [subject] } label: {
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(resumed == nil ? "START HERE" : "CONTINUE")
+                        .font(.caption.bold())
+                        .opacity(0.85)
+                    Text(subject.displayName)
+                        .font(.title2.bold())
+                        .multilineTextAlignment(.leading)
+                    if let next {
+                        Text(next.style == .lesson
+                             ? "Next: \(next.title) · \(LearningPath.unitName(next.unit))"
+                             : "Next: \(next.title)")
+                            .font(.subheadline)
+                            .opacity(0.9)
+                            .multilineTextAlignment(.leading)
+                    }
+                    Label(resumed == nil ? "Start" : "Continue", systemImage: "play.fill")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 16).padding(.vertical, 8)
+                        .background(.white, in: .capsule)
+                        .padding(.top, 6)
+                }
+                Spacer(minLength: 0)
+                ZStack {
+                    ProgressRing(value: state.fraction, color: .white, track: .white.opacity(0.25), lineWidth: 8)
+                    Image(systemName: subject.icon)
+                        .font(.system(size: 30, weight: .semibold))
+                }
+                .frame(width: 84, height: 84)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .gradientCard([subject.color, subject.color.opacity(0.7)])
+        }
+        .buttonStyle(.plain)
+        .disabled(subjectLevels.isEmpty)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Opens the \(subject.displayName) path")
+    }
+
+    // MARK: Totals
+
+    private func totals(_ summary: [Subject: LearningPath.Progress]) -> some View {
+        let all = summary.values
+        let done = all.reduce(0) { $0 + $1.done }
+        let total = all.reduce(0) { $0 + $1.total }
+        let stars = all.reduce(0) { $0 + $1.stars }
+        let trophies = all.filter(\.isComplete).count
+        return HStack(spacing: 12) {
+            totalTile("\(done)", detail: "of \(total) levels", icon: "checkmark.circle.fill", color: .green)
+            totalTile("\(stars)", detail: "stars", icon: "star.fill", color: .yellow)
+            totalTile("\(trophies)", detail: trophies == 1 ? "path done" : "paths done", icon: "trophy.fill",
+                      color: .orange)
+        }
+    }
+
+    private func totalTile(_ value: String, detail: String, icon: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Image(systemName: icon).foregroundStyle(color)
+            Text(value)
+                .font(.title2.bold().monospacedDigit())
+                .contentTransition(.numericText())
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
+        .accessibilityElement(children: .combine)
+    }
+
+    // MARK: Jump to a category
+
+    private func categoryChips(_ proxy: ScrollViewProxy) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(Subject.Category.allCases, id: \.self) { category in
+                    Button {
+                        withAnimation(.snappy) { proxy.scrollTo(category, anchor: .top) }
+                    } label: {
+                        Label(category.rawValue, systemImage: category.icon)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(category.color)
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .background(category.color.opacity(0.14), in: .capsule)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Scrolls to this category")
+                }
+            }
+            .padding(.horizontal)
+        }
+        .padding(.horizontal, -16)
+    }
+
     // MARK: Areas to improve
 
-    private var improveSection: some View {
-        let weak = LearningPath.weakSubjects(in: questions)
-        return VStack(alignment: .leading, spacing: 10) {
-            Label("Areas to improve", systemImage: "chart.bar.xaxis")
-                .font(.title3.bold())
+    private func improveSection(_ weak: [(subject: Subject, stats: LearningPath.Stats)],
+                                bySubject: [Subject: [Question]]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionHeader("Areas to improve", icon: "chart.bar.xaxis", color: .red, trailing: nil)
 
-            if weak.isEmpty {
-                Text("Play a few levels and your weakest subjects will show up here, with a practice round built from the questions you miss most.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .card()
-            } else {
+            VStack(spacing: 0) {
                 ForEach(weak, id: \.subject) { item in
                     HStack(spacing: 12) {
-                        IconBadge(icon: item.subject.icon, color: item.subject.color, size: 42)
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Text(item.subject.displayName).font(.headline)
-                                Spacer()
-                                Text("\(item.stats.percent)%")
-                                    .font(.headline.monospacedDigit())
-                                    .foregroundStyle(color(for: item.stats.percent))
-                            }
-                            ProgressView(value: Double(item.stats.percent), total: 100)
-                                .tint(color(for: item.stats.percent))
+                        ZStack {
+                            ProgressRing(value: Double(item.stats.percent) / 100,
+                                         color: color(for: item.stats.percent))
+                            Text("\(item.stats.percent)")
+                                .font(.caption.bold().monospacedDigit())
+                        }
+                        .frame(width: 42, height: 42)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.subject.displayName).font(.headline)
                             Text("\(item.stats.correct) of \(item.stats.answered) answers correct")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
+                        Spacer(minLength: 8)
                         Button("Practice") {
                             let pool = bySubject[item.subject] ?? []
                             session = QuizSession(title: "\(item.subject.displayName): weak spots",
@@ -80,10 +200,24 @@ struct LearnView: View {
                         .buttonStyle(.borderedProminent)
                         .buttonBorderShape(.capsule)
                     }
-                    .card()
+                    .padding(.horizontal, 14).padding(.vertical, 12)
+
+                    if item.subject != weak.last?.subject {
+                        Divider().padding(.leading, 68)
+                    }
                 }
             }
+            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
         }
+    }
+
+    private var improveHint: some View {
+        Label("Play a few levels and your weakest subjects will show up at the top, with a practice round built from the questions you miss most.",
+              systemImage: "chart.bar.xaxis")
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .card()
     }
 
     private func color(for percent: Int) -> Color {
@@ -92,213 +226,100 @@ struct LearnView: View {
 
     // MARK: Subjects
 
-    private func categorySection(_ category: Subject.Category) -> some View {
-        let subjects = Subject.allCases.filter { $0.category == category }
-        return VStack(alignment: .leading, spacing: 10) {
-            Label(category.rawValue, systemImage: category.icon)
-                .font(.title3.bold())
+    private func sectionHeader(_ title: String, icon: String, color: Color, trailing: String?) -> some View {
+        HStack(spacing: 10) {
+            IconBadge(icon: icon, color: color, size: 30)
+            Text(title).font(.title3.bold())
+            Spacer()
+            if let trailing {
+                Text(trailing)
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
 
-            VStack(spacing: 0) {
+    private func categorySection(_ category: Subject.Category,
+                                 summary: [Subject: LearningPath.Progress]) -> some View {
+        let subjects = Subject.allCases.filter { $0.category == category }
+        let done = subjects.reduce(0) { $0 + (summary[$1]?.done ?? 0) }
+        let total = subjects.reduce(0) { $0 + (summary[$1]?.total ?? 0) }
+        return VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(category.rawValue, icon: category.icon, color: category.color,
+                          trailing: "\(done)/\(total)")
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12, alignment: .top)], spacing: 12) {
                 ForEach(subjects) { subject in
-                    let total = LearningPath.path(for: bySubject[subject] ?? []).count
-                    let done = progress.filter { $0.subjectRaw == subject.rawValue && $0.level < total }
+                    let state = summary[subject] ?? LearningPath.Progress(done: 0, total: 0, stars: 0)
                     NavigationLink(value: subject) {
-                        HStack(spacing: 12) {
-                            IconBadge(icon: subject.icon, color: subject.color)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(subject.displayName)
-                                ProgressView(value: Double(done.count), total: Double(max(total, 1)))
-                                    .tint(subject.color)
-                            }
-                            Spacer(minLength: 8)
-                            if total > 0, done.count == total {
-                                Image(systemName: "trophy.fill").foregroundStyle(.yellow)
-                            }
-                            Text("\(done.count)/\(total)")
-                                .font(.subheadline.monospacedDigit())
-                                .foregroundStyle(.secondary)
-                            Image(systemName: "chevron.right")
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(.tertiary)
-                        }
-                        .padding(.horizontal, 14).padding(.vertical, 10)
-                        .contentShape(.rect)
+                        SubjectCard(subject: subject, progress: state)
                     }
                     .buttonStyle(.plain)
-                    .disabled(total == 0)
-
-                    if subject != subjects.last {
-                        Divider().padding(.leading, 62)
-                    }
+                    .disabled(state.total == 0)
                 }
             }
-            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
         }
     }
 }
 
-/// One subject's path: three units of lessons, timed reviews, and a final mastery challenge.
-/// Finish a level with a heart left to unlock the next.
-struct PathView: View {
+/// One subject in the Learn grid: icon, progress ring, name and level count.
+private struct SubjectCard: View {
     let subject: Subject
+    let progress: LearningPath.Progress
 
-    @Query private var questions: [Question]
-    @Query private var progress: [LevelProgress]
-    @State private var session: QuizSession?
-
-    /// Sideways shift of each node, repeating, so the path winds left and right.
-    private static let sway: [CGFloat] = [0, 55, 85, 55, 0, -55, -85, -55]
-
-    private var levels: [LearningPath.PathLevel] {
-        LearningPath.path(for: questions.filter { $0.subject == subject })
-    }
-
-    private var stars: [Int: Int] {
-        Dictionary(progress.filter { $0.subjectRaw == subject.rawValue }.map { ($0.level, $0.stars) },
-                   uniquingKeysWith: max)
+    private var status: String {
+        if progress.total == 0 { return "No questions yet" }
+        if progress.isComplete { return "Complete" }
+        if progress.isStarted { return "\(progress.done) of \(progress.total) levels" }
+        return "\(progress.total) levels"
     }
 
     var body: some View {
-        let levels = levels
-        let stars = stars.filter { $0.key < levels.count }
-        let current = LearningPath.currentLevel(count: levels.count, completed: Set(stars.keys))
-        let stats = LearningPath.stats(for: questions.filter { $0.subject == subject })
-
-        ScrollView {
-            VStack(spacing: 22) {
-                header(done: min(current, levels.count), total: levels.count,
-                       earned: stars.values.reduce(0, +), stats: stats)
-
-                ForEach(levels.indices, id: \.self) { i in
-                    if i == 0 || levels[i - 1].unit != levels[i].unit {
-                        unitHeader(levels[i].unit, levels: levels, stars: stars)
-                    }
-                    node(index: i, level: levels[i], stars: stars[i], isCurrent: i == current,
-                         locked: i > current)
-                        .offset(x: Self.sway[i % Self.sway.count])
-                }
-
-                if !levels.isEmpty {
-                    VStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                IconBadge(icon: subject.icon, color: subject.color, size: 44)
+                Spacer()
+                ZStack {
+                    ProgressRing(value: progress.fraction, color: progress.isComplete ? .yellow : subject.color,
+                                 lineWidth: 4)
+                    if progress.isComplete {
                         Image(systemName: "trophy.fill")
-                            .font(.system(size: 44))
-                            .foregroundStyle(current >= levels.count ? Color.yellow : Color(.systemFill))
-                        Text(current >= levels.count ? "Path complete!" : "Finish every level to earn the trophy")
-                            .font(.footnote)
+                            .font(.caption)
+                            .foregroundStyle(.yellow)
+                    } else if progress.isStarted {
+                        Text("\(Int((progress.fraction * 100).rounded()))")
+                            .font(.caption2.bold().monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.top, 8)
+                }
+                .frame(width: 34, height: 34)
+            }
+            Text(subject.displayName)
+                .font(.headline)
+                .multilineTextAlignment(.leading)
+                .lineLimit(2, reservesSpace: true)
+            HStack(spacing: 4) {
+                Text(status)
+                Spacer(minLength: 4)
+                if progress.stars > 0 {
+                    Image(systemName: "star.fill").foregroundStyle(.yellow)
+                    Text("\(progress.stars)").monospacedDigit()
                 }
             }
-            .padding()
-            .frame(maxWidth: 520)
-            .frame(maxWidth: .infinity)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
         }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle(subject.displayName)
-        .navigationBarTitleDisplayMode(.inline)
-        .fullScreenCover(item: $session) { QuizView(session: $0) }
-    }
-
-    private func header(done: Int, total: Int, earned: Int, stats: LearningPath.Stats) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label(subject.category.rawValue.uppercased(), systemImage: subject.icon)
-                .font(.caption.bold())
-                .opacity(0.85)
-            Text(subject.displayName).font(.title.bold())
-            Text("\(done) of \(total) levels · \(earned)/\(total * 3) stars"
-                 + (stats.answered > 0 ? " · \(stats.percent)% accuracy" : ""))
-                .font(.subheadline)
-                .opacity(0.9)
-            ProgressView(value: Double(done), total: Double(max(total, 1)))
-                .tint(.white)
-        }
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .gradientCard([subject.color, subject.color.opacity(0.65)])
-    }
-
-    private func unitHeader(_ unit: Int, levels: [LearningPath.PathLevel], stars: [Int: Int]) -> some View {
-        let indices = levels.indices.filter { levels[$0].unit == unit }
-        let done = indices.filter { stars[$0] != nil }.count
-        return HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("UNIT \(unit)").font(.caption2.bold()).foregroundStyle(.secondary)
-                Text(LearningPath.unitName(unit)).font(.headline)
-            }
-            Spacer()
-            Text("\(done)/\(indices.count)")
-                .font(.subheadline.monospacedDigit())
-                .foregroundStyle(done == indices.count ? .green : .secondary)
-        }
-        .padding(.horizontal, 16).padding(.vertical, 10)
-        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16))
-        .padding(.top, 6)
-    }
-
-    private func icon(for level: LearningPath.PathLevel, done: Bool, locked: Bool) -> String {
-        if locked { return "lock.fill" }
-        if done { return "checkmark" }
-        switch level.style {
-        case .lesson: return "play.fill"
-        case .review: return "arrow.triangle.2.circlepath"
-        case .mastery: return "crown.fill"
-        }
-    }
-
-    private func node(index: Int, level: LearningPath.PathLevel, stars: Int?, isCurrent: Bool,
-                      locked: Bool) -> some View {
-        let special = level.style != .lesson
-        let fill: Color = locked ? Color(.systemGray4) : level.style == .mastery ? .yellow : subject.color
-        let size: CGFloat = special ? 90 : 78
-        return Button {
-            session = QuizSession(title: "\(subject.displayName) · \(level.title)",
-                                  questions: level.questions,
-                                  mode: level.isTimed ? .timed : .level,
-                                  subject: subject, level: index)
-        } label: {
-            VStack(spacing: 6) {
-                if isCurrent {
-                    Text("START")
-                        .font(.caption.bold())
-                        .foregroundStyle(subject.color)
-                        .padding(.horizontal, 12).padding(.vertical, 5)
-                        .background(Color(.secondarySystemGroupedBackground), in: .capsule)
-                        .overlay(Capsule().stroke(subject.color.opacity(0.4)))
-                }
-                ZStack {
-                    // Darker disc underneath gives the node a raised look.
-                    Circle().fill(fill.opacity(0.55)).offset(y: 6)
-                    Circle().fill(fill.gradient)
-                    Image(systemName: icon(for: level, done: stars != nil, locked: locked))
-                        .font(.system(size: special ? 32 : 28, weight: .heavy))
-                        .foregroundStyle(.white)
-                        .symbolEffect(.pulse, isActive: isCurrent)
-                }
-                .frame(width: size, height: size)
-                .padding(.bottom, 6)
-                .overlay {
-                    if isCurrent {
-                        Circle().stroke(subject.color.opacity(0.35), lineWidth: 5).padding(-8).offset(y: -3)
-                    }
-                }
-
-                Text(level.title).font(.subheadline.weight(.semibold))
-                if let stars {
-                    HStack(spacing: 2) {
-                        ForEach(0..<3, id: \.self) { s in
-                            Image(systemName: s < stars ? "star.fill" : "star")
-                                .foregroundStyle(s < stars ? .yellow : .secondary)
-                        }
-                    }
-                    .font(.caption)
-                } else {
-                    Text("\(level.questions.count) questions" + (level.isTimed ? " · timed" : ""))
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .disabled(locked)
-        .accessibilityLabel("\(level.title), \(locked ? "locked" : stars != nil ? "completed" : "ready")")
+        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
+        .contentShape(.rect(cornerRadius: 20))
+        .opacity(progress.total == 0 ? 0.5 : 1)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(subject.displayName), \(status)"
+                            + (progress.stars > 0 ? ", \(progress.stars) stars" : ""))
+        .accessibilityAddTraits(.isButton)
     }
 }

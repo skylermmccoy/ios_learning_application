@@ -34,7 +34,8 @@ starter_questions.json  ──decode──▶  [StarterQuestion]  ──seedIfNe
 | File | Role |
 | --- | --- |
 | `TodayView` | Daily challenge, due reviews, XP/level, streak, weak subjects. |
-| `LearnView` | Per-subject level path and level entry. |
+| `LearnView` | Learn tab: Continue card, totals, weak areas, subject grid by category. |
+| `PathView` | One subject's path: unit headers, level nodes joined by a trail, and `LevelSheet` (the preview shown before a level starts). |
 | `PracticeView` | Practice / timed tests by subject or format. |
 | `MyStuffView` | User questions, history. |
 | `AddQuestionView` | In-app question editor. |

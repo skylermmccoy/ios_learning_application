@@ -126,9 +126,7 @@ struct QuizView: View {
 
                 // Wide: question on the left, answers on the right. Narrow: stacked.
                 Columns(wide: wide) {
-                    Text(question.prompt)
-                        .font(.title2.weight(.bold))
-                        .fixedSize(horizontal: false, vertical: true)
+                    promptCard
                     if revealed, wide { feedback }
                 } trailing: {
                     QuestionBody(question: question, revealed: revealed, onAnswer: handle)
@@ -154,6 +152,26 @@ struct QuizView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+    }
+
+    /// The question itself, on a card with a stripe in the subject's colour.
+    private var promptCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("QUESTION \(index + 1) OF \(session.questions.count)")
+                .font(.caption.bold())
+                .foregroundStyle(.secondary)
+            Text(question.prompt)
+                .font(.title3.weight(.bold))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 16)
+        .padding(.leading, 22)
+        .padding(.trailing, 16)
+        .background(Color(.secondarySystemGroupedBackground))
+        .overlay(alignment: .leading) { question.subject.color.frame(width: 6) }
+        .clipShape(.rect(cornerRadius: 20))
+        .accessibilityElement(children: .combine)
     }
 
     private func chip(_ text: String, icon: String, color: Color) -> some View {

@@ -5,14 +5,8 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 ## Next up
 
 ### Algorithms (top priority)
-- [ ] Audit current algorithm coverage (Big O 31, Sorting 34, Searching 27, Graphs 31, Code Design 12) against the Educative "must-know algorithms" list in `qustions.txt`; write the gap list to `docs/CONTENT_GAPS.md`.
-- [ ] Sorting: bubble, selection, insertion, merge, quick, heap, counting. Add Code Builder + Fill the Blank for each, with best/avg/worst time and space in explanations.
-- [ ] Searching: linear, binary (iterative + recursive), BFS/DFS as search, two pointers, sliding window.
-- [ ] Graphs: BFS, DFS, Dijkstra, topological sort, union-find, cycle detection, MST (Kruskal/Prim).
-- [ ] Big O: loops, nested loops, recursion, amortized, space complexity, "which is faster for n = …".
+- [ ] Audit current algorithm coverage (Big O 49, Sorting 55, Searching 48, Graphs 52, Data Structures 30, Recursion & DP 27, Code Design 30) against the Educative "must-know algorithms" list in `qustions.txt`; write the gap list to `docs/CONTENT_GAPS.md`.
 - [ ] Code Design: TypeScript variants alongside Python (add a `typescript` subject or tag; (needs owner) which).
-- [ ] Dynamic programming and recursion/backtracking questions (new subject under Algorithms).
-- [ ] Hash tables, stacks/queues, trees/heaps/tries (new "Data Structures" subject, Algorithms category).
 
 ### Certifications and history (from `qustions.txt`)
 - [ ] Scrum Master: expand to ≥ 30 questions across roles, events, artifacts, values.
@@ -34,6 +28,8 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] Local notifications for due reviews and streak reminders.
 
 ## Done
+- [x] Learn tab redesign: Continue card, totals, category chips, subject grid; path screen with a trail between levels, unit cards and a level preview sheet; question prompt card in quizzes.
+- [x] +156 algorithm questions (718 total): Sorting 21, Searching 21, Graphs 21, Big O 18, Code Design 18 (Python), and two new subjects, Data Structures (30) and Recursion & DP (27). About 40 more levels across the algorithm paths.
 - [x] Deeper learning paths: three difficulty units per subject, timed unit reviews, mastery challenge.
 - [x] Every question labelled with `difficulty` 1–3; bank sorted by subject then difficulty; optional `ref` "read more" links (W3Schools pages checked to exist).
 - [x] New subjects: Java (30), Prolog (26), Lean 4 (8), Scanners & Parsers (20, from the owner's homework in `references/`).
