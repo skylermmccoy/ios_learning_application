@@ -4,6 +4,10 @@ extension Subject.Category {
     var color: Color {
         switch self {
         case .criticalThinking: .indigo
+        case .informationTheory: .purple
+        case .networking: .cyan
+        case .computerEngineering: .red
+        case .database: .mint
         case .homework: .teal
         case .cybersecurity: .green
         case .algorithms: .orange
@@ -15,6 +19,10 @@ extension Subject.Category {
     var icon: String {
         switch self {
         case .criticalThinking: "brain.head.profile"
+        case .informationTheory: "waveform"
+        case .networking: "network"
+        case .computerEngineering: "cpu"
+        case .database: "cylinder.split.1x2"
         case .homework: "book.closed"
         case .cybersecurity: "lock.shield"
         case .algorithms: "chart.line.uptrend.xyaxis"

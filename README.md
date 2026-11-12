@@ -1,6 +1,6 @@
 # iOS Learning Application
 
-A SwiftUI study app that turns learning into a game. Short quizzes, a Duolingo-style learning path per subject, spaced-repetition reviews, XP, streaks and combos. It ships with **718 built-in questions across 31 subjects**, with a heavy focus on **algorithms**, and lets you add your own.
+A SwiftUI study app that turns learning into a game. Short quizzes, a Duolingo-style learning path per subject, spaced-repetition reviews, XP, streaks and combos. It ships with **978 built-in questions across 38 subjects**, with a heavy focus on **algorithms**, and lets you add your own.
 
 > Status: early / actively developed. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
 

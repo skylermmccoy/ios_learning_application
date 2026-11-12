@@ -7,10 +7,9 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 ### Teaching lessons from the owner's books (`references/`, see `docs/LESSON_FORMAT.md`)
 - [ ] Security: teaching notes + questions for Security Basics, Nmap, Metasploit, Netcat from NIST SP 800-115 and the Penetration Testing Handbook.
 - [ ] Web application security (new subject) from The Web Application Hacker's Handbook.
-- [ ] Information theory / Claude Shannon from *A Mind at Play* (the owner started sketching this subject in `Subject.swift`).
-- [ ] Networking (new subjects; the owner sketched `servers`, `protocols`) from the CCNA 200-301 Official Cert Guide.
+- [ ] Networking, CCNA Vol. 2 topics (NAT, NTP, SNMP, syslog, FTP/TFTP in depth) once the owner adds Volume 2; the current file is Vol. 1 only.
 - [ ] CompTIA A+ Core 1 and Core 2 (new subjects): original questions on the objectives the practice-test books cover; never reuse their questions.
-- [ ] Computer engineering / electronics (new subject) from Practical Electronics for Inventors.
+- [ ] Computer engineering: op-amps, filters, timers, power supplies, microcontrollers (Practical Electronics ch. 8–13).
 - [ ] Machine learning (new subject) from Machine Learning with PyTorch and Scikit-Learn.
 - [ ] Teaching notes for the remaining subjects (homework languages, critical thinking, certifications).
 
@@ -38,6 +37,7 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] Local notifications for due reviews and streak reminders.
 
 ## Done
+- [x] Seven new subjects with teaching notes and original questions from the owner's books: Claude Shannon & Information (*A Mind at Play*), Network Protocols and Servers & Services (CCNA Vol. 1), Circuits, Electronic Components and Digital Logic (*Practical Electronics for Inventors*), and SQL (W3Schools and SQLite docs). 56 notes, 201 questions.
 - [x] Teaching lessons for the 7 algorithm subjects: swipeable cards before each lesson, written from *Grokking Algorithms* (Code Design from the Python docs and W3Schools), questions tagged by topic, lessons named after what they teach, "Review the lesson" after a wrong answer, plus new questions on the book's topics.
 - [x] Learn tab redesign: Continue card, totals, category chips, subject grid; path screen with a trail between levels, unit cards and a level preview sheet; question prompt card in quizzes.
 - [x] +156 algorithm questions (718 total): Sorting 21, Searching 21, Graphs 21, Big O 18, Code Design 18 (Python), and two new subjects, Data Structures (30) and Recursion & DP (27). About 40 more levels across the algorithm paths.
