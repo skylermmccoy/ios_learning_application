@@ -53,6 +53,26 @@ enum LearningPath {
             case .mastery: "Mastery challenge"
             }
         }
+
+        /// What to expect, shown before you start.
+        var blurb: String {
+            switch style {
+            case .lesson: "No clock. Take your time and read each explanation."
+            case .review: "Against the clock. Questions from every lesson in this unit."
+            case .mastery: "Against the clock. Questions from all three units."
+            }
+        }
+
+        /// The formats in this level and how many of each, in the order they appear.
+        var kindCounts: [(kind: QuestionKind, count: Int)] {
+            var order: [QuestionKind] = []
+            var counts: [QuestionKind: Int] = [:]
+            for q in questions {
+                if counts[q.kind] == nil { order.append(q.kind) }
+                counts[q.kind, default: 0] += 1
+            }
+            return order.map { ($0, counts[$0] ?? 0) }
+        }
     }
 
     static func unitName(_ unit: Int) -> String {
@@ -60,6 +80,14 @@ enum LearningPath {
         case 1: "Foundations"
         case 2: "Core"
         default: "Advanced"
+        }
+    }
+
+    static func unitBlurb(_ unit: Int) -> String {
+        switch unit {
+        case 1: "Start here: the basic ideas and words."
+        case 2: "The ideas you will use most."
+        default: "Harder problems and edge cases."
         }
     }
 
@@ -126,6 +154,41 @@ enum LearningPath {
     /// Index of the first level not yet completed (equals `count` when all are done).
     static func currentLevel(count: Int, completed: Set<Int>) -> Int {
         (0..<count).first { !completed.contains($0) } ?? count
+    }
+
+    /// How far along one subject's path you are.
+    struct Progress: Equatable {
+        let done: Int
+        let total: Int
+        /// Stars earned on finished levels (up to 3 each).
+        let stars: Int
+
+        var fraction: Double { total == 0 ? 0 : Double(done) / Double(total) }
+        var isStarted: Bool { done > 0 }
+        var isComplete: Bool { total > 0 && done == total }
+    }
+
+    /// Progress on a path of `levelCount` levels. Records past the end of the path
+    /// (left over when a subject's questions change) are ignored.
+    static func progress(levelCount: Int, records: [LevelProgress]) -> Progress {
+        var best: [Int: Int] = [:]
+        for r in records where r.level >= 0 && r.level < levelCount {
+            best[r.level] = max(best[r.level] ?? 0, r.stars)
+        }
+        return Progress(done: best.count, total: levelCount, stars: best.values.reduce(0, +))
+    }
+
+    /// The subject to offer under "Continue": the one you finished a level in most recently
+    /// that still has levels left. nil if you haven't started anything unfinished.
+    static func resumeSubject(records: [LevelProgress], levelCounts: [Subject: Int]) -> Subject? {
+        let bySubject = Dictionary(grouping: records, by: \.subjectRaw)
+        return records.sorted { $0.completedAt > $1.completedAt }
+            .lazy
+            .compactMap { Subject(rawValue: $0.subjectRaw) }
+            .first { subject in
+                let count = levelCounts[subject] ?? 0
+                return !progress(levelCount: count, records: bySubject[subject.rawValue] ?? []).isComplete && count > 0
+            }
     }
 
     struct Stats {

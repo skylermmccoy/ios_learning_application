@@ -6,7 +6,7 @@ struct appTests {
 
     @Test func starterQuestionsAreValid() throws {
         let questions = try QuestionBank.loadStarter()
-        #expect(questions.count >= 550)
+        #expect(questions.count >= 700)
         for q in questions {
             #expect((1...3).contains(q.difficulty ?? 0), "Missing difficulty: \(q.prompt)")
             if let ref = q.ref { #expect(URL(string: ref)?.scheme == "https", "Bad ref: \(ref)") }
@@ -103,6 +103,47 @@ struct appTests {
         #expect(LearningPath.currentLevel(count: 3, completed: []) == 0)
         #expect(LearningPath.currentLevel(count: 3, completed: [0, 1]) == 2)
         #expect(LearningPath.currentLevel(count: 3, completed: [0, 1, 2]) == 3)
+    }
+
+    @Test func progressCountsLevelsAndStars() {
+        let records = [
+            LevelProgress(subject: .sorting, level: 0, stars: 3),
+            LevelProgress(subject: .sorting, level: 1, stars: 1),
+            LevelProgress(subject: .sorting, level: 1, stars: 2),   // duplicate: best stars win
+            LevelProgress(subject: .sorting, level: 9, stars: 3),   // past the end: ignored
+        ]
+        let p = LearningPath.progress(levelCount: 4, records: records)
+        #expect(p == LearningPath.Progress(done: 2, total: 4, stars: 5))
+        #expect(p.fraction == 0.5 && p.isStarted && !p.isComplete)
+
+        let empty = LearningPath.progress(levelCount: 0, records: [])
+        #expect(empty.fraction == 0 && !empty.isStarted && !empty.isComplete)
+        #expect(LearningPath.progress(levelCount: 2, records: Array(records.prefix(2))).isComplete)
+    }
+
+    @Test func resumePicksLatestUnfinishedSubject() {
+        let now = Date.now
+        func done(_ subject: Subject, _ level: Int, minutesAgo: Double) -> LevelProgress {
+            LevelProgress(subject: subject, level: level, stars: 3, completedAt: now.addingTimeInterval(-60 * minutesAgo))
+        }
+        let counts: [Subject: Int] = [.sorting: 2, .graphs: 5, .bigO: 5]
+        // Sorting was played last but is finished, so Graphs (next most recent) is offered.
+        let records = [done(.bigO, 0, minutesAgo: 90), done(.graphs, 0, minutesAgo: 30),
+                       done(.sorting, 0, minutesAgo: 10), done(.sorting, 1, minutesAgo: 5)]
+        #expect(LearningPath.resumeSubject(records: records, levelCounts: counts) == .graphs)
+        #expect(LearningPath.resumeSubject(records: [], levelCounts: counts) == nil)
+        // Everything started is finished: nothing to resume.
+        #expect(LearningPath.resumeSubject(records: Array(records.suffix(2)), levelCounts: counts) == nil)
+    }
+
+    @Test func levelListsItsFormatsInOrder() {
+        let kinds: [QuestionKind] = [.multipleChoice, .multipleChoice, .match, .fillBlank, .multipleChoice]
+        let qs = kinds.enumerated().map { i, kind in
+            Question(subject: .python, kind: kind, prompt: "q\(i)", explanation: "")
+        }
+        let level = LearningPath.PathLevel(style: .lesson, unit: 1, lessonNumber: 1, questions: qs)
+        #expect(level.kindCounts.map(\.kind) == [.multipleChoice, .match, .fillBlank])
+        #expect(level.kindCounts.map(\.count) == [3, 1, 1])
     }
 
     @Test func weakSubjectsAreRankedByAccuracy() {
