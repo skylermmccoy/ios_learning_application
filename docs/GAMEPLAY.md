@@ -38,6 +38,8 @@ Level *L* starts at `200 · (L-1) · L` XP: L2 = 400, L3 = 1200, L4 = 2400, L5 =
 - Levels unlock in order. A level is passed by finishing it with at least one heart left.
 - Progress is stored by position on the path, so adding questions to a subject can shift which levels count as completed.
 - Stars = hearts left when the level is finished (1–3). One `LevelProgress` per subject + level.
+- `LearningPath.progress(levelCount:records:)` gives levels done, total and stars for a subject (records past the end of the path are ignored). `resumeSubject` picks the subject for the Learn tab's Continue card: the one with the most recently finished level that still has levels left. With nothing in progress the card offers Big O.
+- Tapping a level opens a preview sheet (question count, timed or not, hearts, formats from `PathLevel.kindCounts`); the quiz starts from its Start button.
 - "Weak subjects": at least 5 answers and under 85% correct, weakest first (max 3). "Weak spots": questions with the highest `timesWrong - timesCorrect`.
 
 ## Spaced repetition (`Question.recordAnswer`)

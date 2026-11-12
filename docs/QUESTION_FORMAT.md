@@ -35,13 +35,13 @@ Built-in questions live in `app/Data/starter_questions.json`, a JSON array decod
 ## Subject raw values
 
 - Critical thinking: `logic`, `fallacy`, `patterns`, `factOpinion`
-- Algorithms: `bigO`, `sorting`, `searching`, `graphs`, `codeDesign`
+- Algorithms: `bigO`, `sorting`, `searching`, `graphs`, `dataStructures`, `recursion`, `codeDesign`
 - Homework: `discreteMath`, `python`, `java`, `bash`, `zsh`, `racket`, `prolog`, `lean4`, `parsing`
 - Cybersecurity: `cyber`, `nmap`, `metasploit`, `cve`, `knockd`, `netcat`
 - Certifications: `scrum`, `securityPlus`, `aws`, `azure`
 - History: `history`
 
-Adding a new subject means editing `Subject.swift` (case, `category`, `displayName`, `icon`) and nothing else; views iterate `Subject.allCases`.
+Adding a new subject means editing `Subject.swift` (case, `category`, `displayName`, `icon`, `tagline`) and nothing else; views iterate `Subject.allCases`.
 
 ## Authoring rules
 
