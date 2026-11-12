@@ -6,8 +6,10 @@ struct appTests {
 
     @Test func starterQuestionsAreValid() throws {
         let questions = try QuestionBank.loadStarter()
-        #expect(questions.count >= 340)
+        #expect(questions.count >= 550)
         for q in questions {
+            #expect((1...3).contains(q.difficulty ?? 0), "Missing difficulty: \(q.prompt)")
+            if let ref = q.ref { #expect(URL(string: ref)?.scheme == "https", "Bad ref: \(ref)") }
             switch q.resolvedKind {
             case .multipleChoice:
                 #expect((q.choices ?? []).indices.contains(q.answer ?? -1), "Bad answer index: \(q.prompt)")
@@ -65,22 +67,38 @@ struct appTests {
         #expect(QuestionBank.dueForReview(from: [q], now: day(7)).count == 1)
     }
 
-    @Test func levelsAreChunkedEasyToHard() {
-        func make(_ n: Int, _ kind: QuestionKind, from start: Int) -> [Question] {
+    @Test func pathHasUnitsReviewsAndMastery() {
+        func make(_ n: Int, difficulty: Int, kind: QuestionKind = .multipleChoice, from start: Int) -> [Question] {
             (0..<n).map { i in
-                let q = Question(subject: .python, kind: kind, prompt: "\(kind.rawValue) \(i)", explanation: "")
+                let q = Question(subject: .python, kind: kind, prompt: "d\(difficulty) \(i)", explanation: "")
+                q.difficultyRaw = difficulty
                 q.order = start + i
                 return q
             }
         }
-        // 12 questions → levels of 5, 5, and a remainder of 2 folded into the last: 5 + 7.
-        let qs = make(4, .buildCode, from: 0) + make(8, .multipleChoice, from: 4)
-        let levels = LearningPath.levels(for: qs.shuffled())
-        #expect(levels.map(\.count) == [5, 7])
-        #expect(levels[0].allSatisfy { $0.kind == .multipleChoice })      // easy format first
-        #expect(levels[0].map(\.order) == [4, 5, 6, 7, 8])                 // stable order
-        #expect(LearningPath.levels(for: []).isEmpty)
-        #expect(LearningPath.levels(for: make(3, .match, from: 0)).map(\.count) == [3])
+        // 12 foundations, 5 core, 2 advanced (too few for a unit: they join Core).
+        let qs = make(12, difficulty: 1, from: 0) + make(5, difficulty: 2, from: 12) + make(2, difficulty: 3, from: 17)
+        let path = LearningPath.path(for: qs.shuffled())
+        typealias Style = LearningPath.PathLevel.Style
+        // Unit 1: lessons of 5 and 7 (remainder of 2 folded in), then a review.
+        // Unit 2: one lesson of 7, no review. Then mastery.
+        #expect(path.map(\.style) == [Style.lesson, .lesson, .review, .lesson, .mastery])
+        #expect(path.map(\.unit) == [1, 1, 1, 2, 2])
+        #expect(path.map(\.questions.count) == [5, 7, 8, 7, 10])
+        #expect(path[0].questions.map(\.order) == [0, 1, 2, 3, 4])            // stable order
+        #expect(path[2].questions.allSatisfy { $0.difficulty == 1 })          // review stays in its unit
+        #expect(path[2].isTimed && path[4].isTimed && !path[0].isTimed)
+        #expect(path.map(\.title) == ["Lesson 1", "Lesson 2", "Foundations review", "Lesson 3", "Mastery challenge"])
+        #expect(Set(path[4].questions.map(\.difficulty)) == [1, 2, 3])        // mastery spans everything
+
+        #expect(LearningPath.path(for: []).isEmpty)
+        // A small subject is a single lesson with no extras.
+        #expect(LearningPath.path(for: make(4, difficulty: 2, from: 0)).map(\.style) == [Style.lesson])
+
+        // Without an explicit difficulty, the format decides the unit.
+        let build = Question(subject: .python, kind: .buildCode, prompt: "b", explanation: "")
+        let blank = Question(subject: .python, kind: .fillBlank, prompt: "f", explanation: "")
+        #expect(build.difficulty == 3 && blank.difficulty == 2)
 
         #expect(LearningPath.currentLevel(count: 3, completed: []) == 0)
         #expect(LearningPath.currentLevel(count: 3, completed: [0, 1]) == 2)

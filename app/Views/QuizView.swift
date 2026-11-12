@@ -184,6 +184,13 @@ struct QuizView: View {
                 CodeBlock(code: question.solutionText)
             }
             Text(question.explanation)
+            if let link = question.referenceLink {
+                Link(destination: link) {
+                    Label("Read more on \(link.host()?.replacingOccurrences(of: "www.", with: "") ?? "the web")",
+                          systemImage: "book")
+                        .font(.subheadline.weight(.medium))
+                }
+            }
             if game.isOver {
                 Label("Out of lives", systemImage: "heart.slash.fill")
                     .font(.headline).foregroundStyle(.red)

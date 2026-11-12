@@ -12,13 +12,17 @@ struct StarterQuestion: Decodable {
     let answers: [String]?
     let extras: [String]?
     let explanation: String
+    /// 1 = foundations, 2 = core, 3 = advanced.
+    let difficulty: Int?
+    /// "Read more" link shown after answering.
+    let ref: String?
 
     var resolvedKind: QuestionKind { kind ?? .multipleChoice }
 }
 
 enum QuestionBank {
     /// Bump this when starter_questions.json changes so installed apps reload it.
-    static let seedVersion = 5
+    static let seedVersion = 6
 
     static func loadStarter(bundle: Bundle = .main) throws -> [StarterQuestion] {
         guard let url = bundle.url(forResource: "starter_questions", withExtension: "json") else {
@@ -43,6 +47,8 @@ enum QuestionBank {
                 let key = Question.bankKey(prompt: s.prompt, code: s.code)
                 if let q = existing.removeValue(forKey: key) {
                     q.order = position
+                    q.difficultyRaw = s.difficulty ?? 0
+                    q.reference = s.ref
                     q.subjectRaw = s.subject.rawValue
                     q.kindRaw = s.resolvedKind.rawValue
                     q.choices = s.choices ?? []
@@ -57,6 +63,8 @@ enum QuestionBank {
                                      answers: s.answers ?? [], extras: s.extras ?? [],
                                      explanation: s.explanation)
                     q.order = position
+                    q.difficultyRaw = s.difficulty ?? 0
+                    q.reference = s.ref
                     context.insert(q)
                 }
             }
