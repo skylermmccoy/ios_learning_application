@@ -14,7 +14,8 @@ SwiftUI app with SwiftData persistence. No networking, no third-party packages. 
 | `QuizMode` (enum) | `Attempt.swift` | `daily`, `timed`, `practice`, `level`. |
 | `GameState` (`@Observable`) | `Game.swift` | Lives, score, combo, missed questions for one run. |
 | `Level` (struct) | `Game.swift` | Player level derived from total XP. |
-| `LearningPath` (enum) | `LearningPath.swift` | Pure functions: split a subject into levels, stats, weak subjects/spots. |
+| `LearningPath` (enum) | `LearningPath.swift` | Pure functions: split a subject into levels (grouped by teaching topic when the subject has notes), stats, weak subjects/spots. |
+| `TeachingNote`, `LessonLibrary` | `Lesson.swift` | Teaching notes from `lessons.json` (cards + sources), looked up by subject and topic. Format in `LESSON_FORMAT.md`. |
 
 The SwiftData container is created in `appApp.swift` with `Question`, `Attempt` and `LevelProgress`. Adding a stored property with a default value is a lightweight migration; anything else needs a migration plan.
 
@@ -35,6 +36,7 @@ starter_questions.json  ──decode──▶  [StarterQuestion]  ──seedIfNe
 | --- | --- |
 | `TodayView` | Daily challenge, due reviews, XP/level, streak, weak subjects. |
 | `LearnView` | Learn tab: Continue card, totals, weak areas, subject grid by category. |
+| `TeachView` | Swipeable teaching cards (`TeachView`) and `LessonFlowView`, which shows the cards and then the quiz in one full-screen cover. |
 | `PathView` | One subject's path: unit headers, level nodes joined by a trail, and `LevelSheet` (the preview shown before a level starts). |
 | `PracticeView` | Practice / timed tests by subject or format. |
 | `MyStuffView` | User questions, history. |

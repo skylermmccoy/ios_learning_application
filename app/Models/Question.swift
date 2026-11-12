@@ -85,6 +85,8 @@ final class Question {
     var difficultyRaw: Int = 0
     /// Optional "read more" link shown after answering.
     var reference: String?
+    /// Id of the teaching note (lessons.json) that covers this question. nil = none.
+    var topic: String?
 
     init(subject: Subject,
          kind: QuestionKind = .multipleChoice,

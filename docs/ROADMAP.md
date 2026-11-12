@@ -4,6 +4,16 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 
 ## Next up
 
+### Teaching lessons from the owner's books (`references/`, see `docs/LESSON_FORMAT.md`)
+- [ ] Security: teaching notes + questions for Security Basics, Nmap, Metasploit, Netcat from NIST SP 800-115 and the Penetration Testing Handbook.
+- [ ] Web application security (new subject) from The Web Application Hacker's Handbook.
+- [ ] Information theory / Claude Shannon from *A Mind at Play* (the owner started sketching this subject in `Subject.swift`).
+- [ ] Networking (new subjects; the owner sketched `servers`, `protocols`) from the CCNA 200-301 Official Cert Guide.
+- [ ] CompTIA A+ Core 1 and Core 2 (new subjects): original questions on the objectives the practice-test books cover; never reuse their questions.
+- [ ] Computer engineering / electronics (new subject) from Practical Electronics for Inventors.
+- [ ] Machine learning (new subject) from Machine Learning with PyTorch and Scikit-Learn.
+- [ ] Teaching notes for the remaining subjects (homework languages, critical thinking, certifications).
+
 ### Algorithms (top priority)
 - [ ] Audit current algorithm coverage (Big O 49, Sorting 55, Searching 48, Graphs 52, Data Structures 30, Recursion & DP 27, Code Design 30) against the Educative "must-know algorithms" list in `qustions.txt`; write the gap list to `docs/CONTENT_GAPS.md`.
 - [ ] Code Design: TypeScript variants alongside Python (add a `typescript` subject or tag; (needs owner) which).
@@ -28,6 +38,7 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] Local notifications for due reviews and streak reminders.
 
 ## Done
+- [x] Teaching lessons for the 7 algorithm subjects: swipeable cards before each lesson, written from *Grokking Algorithms* (Code Design from the Python docs and W3Schools), questions tagged by topic, lessons named after what they teach, "Review the lesson" after a wrong answer, plus new questions on the book's topics.
 - [x] Learn tab redesign: Continue card, totals, category chips, subject grid; path screen with a trail between levels, unit cards and a level preview sheet; question prompt card in quizzes.
 - [x] +156 algorithm questions (718 total): Sorting 21, Searching 21, Graphs 21, Big O 18, Code Design 18 (Python), and two new subjects, Data Structures (30) and Recursion & DP (27). About 40 more levels across the algorithm paths.
 - [x] Deeper learning paths: three difficulty units per subject, timed unit reviews, mastery challenge.

@@ -12,6 +12,7 @@ Built-in questions live in `app/Data/starter_questions.json`, a JSON array decod
 | `code` | string | no | Snippet shown in a monospaced block. |
 | `explanation` | string | yes | Shown after answering. Say *why*, not just *what*. |
 | `difficulty` | int | no | `1` foundations, `2` core, `3` advanced. Decides which unit of the subject's path the question lands in. If missing: multipleChoice/match = 1, fillBlank = 2, buildCode = 3. |
+| `topic` | string | no | Id of the teaching note in `app/Data/lessons.json` that covers this question (see `docs/LESSON_FORMAT.md`). Required for every question in a subject that has notes; the path groups lessons by it. |
 | `ref` | string | no | "Read more" URL shown after answering. Use only URLs that were checked to exist. If missing, the subject's `referenceURL` (in `Subject.swift`) is used. |
 
 ## Per kind
@@ -72,4 +73,4 @@ The owner asked for W3Schools as a reference. Write questions in your own words 
 - Algorithms: `dsa/dsa_algo_bubblesort.php`, `dsa_algo_selectionsort.php`, `dsa_algo_insertionsort.php`, `dsa_algo_quicksort.php`, `dsa_algo_mergesort.php`, `dsa_algo_countingsort.php`, `dsa_algo_linearsearch.php`, `dsa_algo_binarysearch.php`, `dsa_theory_graphs.php`, `dsa_algo_graphs_traversal.php`, `dsa_algo_graphs_dijkstra.php`, `dsa_algo_mst_kruskal.php`, `dsa_algo_mst_prim.php`, `dsa_theory_hashtables.php`, `dsa_data_stacks.php`, `dsa_data_queues.php`, `dsa_ref_dynamic_programming.php`
 - Section home pages: `python/default.asp`, `java/default.asp`, `bash/index.php`, `dsa/index.php`, `typescript/index.php`, `cybersecurity/index.php`, `aws/index.php`, `git/default.asp`
 
-Don't guess other URLs. Check a new one with `curl -s -o /dev/null -w "%{http_code}" -L <url>` first. W3Schools has no Prolog, Lean or Racket pages.
+Don't guess other URLs. Check a new one with `curl -s -o /dev/null -w "%{http_code}" -L -A "Mozilla/5.0" <url>` first. Since 2026-11-12 W3Schools returns 403 to `curl` without a browser user agent, even for pages that exist. W3Schools has no Prolog, Lean or Racket pages.

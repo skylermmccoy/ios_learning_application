@@ -9,7 +9,7 @@ A SwiftUI study app that turns learning into a game. Short quizzes, a Duolingo-s
 | Tab | What it does |
 | --- | --- |
 | **Today** | Daily Challenge (5 mixed questions, same set all day, builds a streak), questions due for review, XP / level, and your weakest subjects. |
-| **Learn** | A Continue card, your totals, and a grid of subjects by category. Each subject opens a path in three units (Foundations, Core, Advanced). Lessons of 5 questions, a timed review after each unit, and a timed mastery challenge at the end. Tap a level to preview it before starting. 1–3 stars based on hearts left. |
+| **Learn** | A Continue card, your totals, and a grid of subjects by category. Each subject opens a path in three units (Foundations, Core, Advanced). Lessons of 5 questions, a timed review after each unit, and a timed mastery challenge at the end. Tap a level to preview it; lessons in the algorithm subjects teach first with swipeable cards (based on *Grokking Algorithms* and other sources), then quiz you. 1–3 stars based on hearts left. |
 | **Practice** | Free practice and 10-question Timed Tests, by subject or by question format. |
 | **My Stuff** | Questions you created, history of attempts, and weak spots. |
 

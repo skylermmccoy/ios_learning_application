@@ -7,3 +7,4 @@ DerivedData/
 *.xcuserstate
 .claude/pr-body.md
 .claude/settings.local.json
+references/

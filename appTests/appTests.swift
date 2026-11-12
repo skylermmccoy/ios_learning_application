@@ -146,6 +146,70 @@ struct appTests {
         #expect(level.kindCounts.map(\.count) == [3, 1, 1])
     }
 
+    @Test func lessonsAreValid() throws {
+        let notes = try LessonLibrary.load()
+        #expect(!notes.isEmpty)
+        var ids = Set<String>()
+        for note in notes {
+            #expect(ids.insert(note.id).inserted, "Duplicate note: \(note.id)")
+            #expect((3...6).contains(note.cards.count), "Needs 3–6 cards: \(note.id)")
+            #expect(!note.title.isEmpty && note.title.count <= 24, "Bad title: \(note.id)")
+            #expect(!note.sources.isEmpty, "No sources: \(note.id)")
+            for source in note.sources {
+                if let url = source.url { #expect(URL(string: url)?.scheme == "https", "Bad source: \(url)") }
+            }
+            for card in note.cards {
+                let hasContent = card.body != nil || card.code != nil || !(card.bullets ?? []).isEmpty
+                #expect(hasContent && !card.title.isEmpty, "Empty card in \(note.id)")
+            }
+        }
+    }
+
+    /// Every question in a subject that has teaching notes points at one of them.
+    @Test func taughtSubjectsTagEveryQuestion() throws {
+        let notes = try LessonLibrary.load()
+        let topics = Dictionary(grouping: notes, by: \.subject).mapValues { Set($0.map(\.topic)) }
+        for q in try QuestionBank.loadStarter() {
+            guard let known = topics[q.subject] else { continue }
+            #expect(q.topic.map(known.contains) == true, "No taught topic: \(q.subject) \(q.prompt)")
+        }
+        // Notes nobody points at would never be shown.
+        let used = Set(try QuestionBank.loadStarter().compactMap { q in q.topic.map { "\(q.subject.rawValue)/\($0)" } })
+        for note in notes { #expect(used.contains(note.id), "Unused note: \(note.id)") }
+    }
+
+    @Test func pathGroupsLessonsByTopic() throws {
+        let json = """
+        [{"subject": "sorting", "topic": "a", "title": "Alpha", "cards": [], "sources": []},
+         {"subject": "sorting", "topic": "b", "title": "Beta", "cards": [], "sources": []},
+         {"subject": "sorting", "topic": "c", "title": "Gamma", "cards": [], "sources": []}]
+        """
+        let notes = try JSONDecoder().decode([TeachingNote].self, from: Data(json.utf8))
+        func make(_ topic: String?, _ n: Int, from start: Int) -> [Question] {
+            (0..<n).map { i in
+                let q = Question(subject: .sorting, prompt: "\(topic ?? "none") \(i)", explanation: "")
+                q.difficultyRaw = 1
+                q.topic = topic
+                q.order = start + i
+                return q
+            }
+        }
+        // Bank order mixes topics; the path regroups them in the notes' order.
+        // "c" has only 2 questions, so it shares a lesson with its neighbour.
+        let qs = make("b", 5, from: 0) + make("a", 5, from: 5) + make("c", 2, from: 10) + make(nil, 3, from: 12)
+        let path = LearningPath.path(for: qs.shuffled(), notes: notes)
+        let lessons = path.filter { $0.style == .lesson }
+        #expect(lessons.map(\.title) == ["Alpha", "Beta & Gamma", "Lesson 3"])
+        #expect(lessons.map(\.topics) == [["a"], ["b", "c"], []])
+        #expect(lessons[0].questions.allSatisfy { $0.topic == "a" })
+        #expect(lessons.map(\.questions.count) == [5, 7, 3])
+
+        // Without notes nothing changes: plain numbered lessons.
+        #expect(LearningPath.path(for: qs, notes: []).filter { $0.style == .lesson }.map(\.title)
+                == ["Lesson 1", "Lesson 2", "Lesson 3"])
+        #expect(LearningPath.lessonName(["A", "B", "C"]) == "A & more")
+    }
+
     @Test func weakSubjectsAreRankedByAccuracy() {
         func q(_ subject: Subject, right: Int, wrong: Int) -> Question {
             let q = Question(subject: subject, prompt: "\(subject.rawValue) \(right) \(wrong)", explanation: "")

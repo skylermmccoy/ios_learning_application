@@ -32,14 +32,16 @@ Level *L* starts at `200 · (L-1) · L` XP: L2 = 400, L3 = 1200, L4 = 2400, L5 =
 `LearningPath.path(for:)` turns a subject's questions into an ordered list of `PathLevel`s:
 
 - **Units.** Questions are grouped by `difficulty`: 1 Foundations, 2 Core, 3 Advanced. A unit with fewer than 3 questions joins its neighbour. Questions without a `difficulty` are rated by format (Quick Pick and Match-Up 1, Fill the Blank 2, Code Builder 3).
-- **Lessons.** Inside a unit, questions are sorted by format (Quick Pick, Match-Up, Fill the Blank, Code Builder), then built-in before user-made, then bank order, and cut into lessons of 5 (`levelSize`). A last lesson with fewer than 3 questions is merged into the previous one. Lessons are untimed.
+- **Topics.** In a subject with teaching notes (`app/Data/lessons.json`), a unit's questions are first grouped by `topic` in the notes' order, so each lesson practises what its cards teach. A topic with fewer than 3 questions in a unit shares a lesson with its neighbour. Lessons are named after their notes ("Bubble sort", "Stacks & Queues", "Hash tables & more"); subjects without notes keep "Lesson N".
+- **Lessons.** Inside a unit (and topic), questions are sorted by format (Quick Pick, Match-Up, Fill the Blank, Code Builder), then built-in before user-made, then bank order, and cut into lessons of 5 (`levelSize`). A last lesson with fewer than 3 questions is merged into the previous one. Lessons are untimed.
 - **Unit review.** A unit with two or more lessons ends with a timed review of up to 8 questions (`reviewSize`) spread evenly across the unit.
 - **Mastery challenge.** A subject with at least 10 questions and two lessons ends with a timed challenge of 10 questions (`masterySize`) spread across every difficulty.
 - Levels unlock in order. A level is passed by finishing it with at least one heart left.
 - Progress is stored by position on the path, so adding questions to a subject can shift which levels count as completed.
 - Stars = hearts left when the level is finished (1–3). One `LevelProgress` per subject + level.
 - `LearningPath.progress(levelCount:records:)` gives levels done, total and stars for a subject (records past the end of the path are ignored). `resumeSubject` picks the subject for the Learn tab's Continue card: the one with the most recently finished level that still has levels left. With nothing in progress the card offers Big O.
-- Tapping a level opens a preview sheet (question count, timed or not, hearts, formats from `PathLevel.kindCounts`); the quiz starts from its Start button.
+- Tapping a level opens a preview sheet (what you'll learn, question count, timed or not, hearts, formats from `PathLevel.kindCounts`). For a lesson with notes the main button is **Learn first**: swipeable cards (`TeachView`), then the questions in the same full-screen flow (`LessonFlowView`). **Skip to questions** goes straight in. Once a lesson is passed, **Play again** is the main button and the cards stay one tap away.
+- After a wrong answer, the feedback card links to the question's teaching note ("Review the lesson").
 - "Weak subjects": at least 5 answers and under 85% correct, weakest first (max 3). "Weak spots": questions with the highest `timesWrong - timesCorrect`.
 
 ## Spaced repetition (`Question.recordAnswer`)
