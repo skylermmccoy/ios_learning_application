@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UIKit
 @testable import app
 
 struct appTests {
@@ -159,10 +160,59 @@ struct appTests {
                 if let url = source.url { #expect(URL(string: url)?.scheme == "https", "Bad source: \(url)") }
             }
             for card in note.cards {
-                let hasContent = card.body != nil || card.code != nil || !(card.bullets ?? []).isEmpty
+                let hasContent = card.body != nil || card.code != nil || !(card.bullets ?? []).isEmpty || card.visual != nil
                 #expect(hasContent && !card.title.isEmpty, "Empty card in \(note.id)")
             }
         }
+    }
+
+    @Test func lessonVisualsAreValid() throws {
+        // Every "visual" in the file must decode: an unreadable one is silently dropped at run time.
+        let url = try #require(Bundle.main.url(forResource: "lessons", withExtension: "json"))
+        let raw = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [[String: Any]])
+        let written = raw.flatMap { $0["cards"] as? [[String: Any]] ?? [] }.filter { $0["visual"] != nil }.count
+        let visuals = try LessonLibrary.load().flatMap(\.cards).compactMap(\.visual)
+        #expect(visuals.count == written, "\(written - visuals.count) visuals failed to decode")
+
+        for visual in visuals.flatMap(\.flattened) {
+            switch visual.kind {
+            case .icons(let icons):
+                for item in icons.items {
+                    #expect(UIImage(systemName: item.symbol) != nil, "No SF Symbol named \(item.symbol)")
+                }
+            case .table(let table):
+                #expect(Set(table.rows.map(\.count)).count == 1, "Ragged table")
+            case .frames(let frames):
+                #expect(frames.count >= 2 && frames.allSatisfy { $0.caption != nil }, "Frames need captions")
+            default: break
+            }
+        }
+    }
+
+    @Test func everyVisualTypeDecodes() throws {
+        let json = """
+        [{"title": "a", "visual": {"type": "bars", "values": [3, 1, 2], "highlight": [0], "pointers": {"lo": 0}}},
+         {"title": "b", "visual": {"type": "cells", "items": ["x", "y"], "arrows": true, "indices": true}},
+         {"title": "c", "visual": {"type": "flow", "steps": ["one", "two"]}},
+         {"title": "d", "visual": {"type": "stack", "layers": ["top", "bottom"], "highlight": [1]}},
+         {"title": "e", "visual": {"type": "graph", "directed": true, "nodes": [{"id": "A", "x": 0, "y": 0}, {"id": "B", "x": 1, "y": 1, "label": "bee"}], "edges": [{"from": "A", "to": "B", "label": "4"}], "highlightEdges": [["A", "B"]]}},
+         {"title": "f", "visual": {"type": "tree", "root": {"label": "8", "children": [null, {"label": "9"}]}, "highlight": ["9"]}},
+         {"title": "g", "visual": {"type": "table", "headers": ["A", "B"], "rows": [["0", "1"]], "highlight": [[0, 1]]}},
+         {"title": "h", "visual": {"type": "plot", "series": [{"label": "n", "points": [[0, 0], [1, 1]]}], "yMax": 5}},
+         {"title": "i", "visual": {"type": "timeline", "events": [{"when": "1948", "what": "paper"}, {"when": "2001", "what": "end"}]}},
+         {"title": "j", "visual": {"type": "icons", "items": [{"symbol": "lock.fill", "label": "Lock"}, {"symbol": "key.fill", "label": "Key"}]}},
+         {"title": "k", "visual": {"type": "compare", "left": {"title": "L", "points": ["a"]}, "right": {"title": "R", "points": ["b"]}}},
+         {"title": "l", "visual": {"type": "frames", "caption": "c", "frames": [{"type": "cells", "items": ["1"], "caption": "x"}, {"type": "cells", "items": ["2"], "caption": "y"}]}},
+         {"title": "m", "body": "kept", "visual": {"type": "hologram"}}]
+        """
+        let cards = try JSONDecoder().decode([TeachingCard].self, from: Data(json.utf8))
+        #expect(cards.prefix(12).allSatisfy { $0.visual != nil })
+        // An unknown type drops the visual but keeps the card.
+        #expect(cards[12].visual == nil && cards[12].body == "kept")
+        if case .tree(let tree) = cards[5].visual?.kind {
+            #expect(tree.root.children?.count == 2 && tree.root.children?[0] == nil)
+        } else { Issue.record("tree did not decode") }
+        #expect(cards[11].visual?.flattened.count == 3)
     }
 
     /// Every question in a subject that has teaching notes points at one of them.

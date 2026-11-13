@@ -16,6 +16,7 @@ SwiftUI app with SwiftData persistence. No networking, no third-party packages. 
 | `Level` (struct) | `Game.swift` | Player level derived from total XP. |
 | `LearningPath` (enum) | `LearningPath.swift` | Pure functions: split a subject into levels (grouped by teaching topic when the subject has notes), stats, weak subjects/spots. |
 | `TeachingNote`, `LessonLibrary` | `Lesson.swift` | Teaching notes from `lessons.json` (cards + sources), looked up by subject and topic. Format in `LESSON_FORMAT.md`. |
+| `CardVisual` | `CardVisual.swift` | The optional diagram on a teaching card (bars, cells, flow, stack, graph, tree, table, plot, timeline, icons, compare, or a `frames` step-through). An unreadable visual is dropped; the card stays. |
 
 The SwiftData container is created in `appApp.swift` with `Question`, `Attempt` and `LevelProgress`. Adding a stored property with a default value is a lightweight migration; anything else needs a migration plan.
 
@@ -51,6 +52,7 @@ starter_questions.json  ──decode──▶  [StarterQuestion]  ──seedIfNe
 
 - `Theme.swift`: category/kind colors, `IconBadge`, `.card()` modifier.
 - `Components.swift`: reusable views.
+- `CardVisualView.swift`: draws a `CardVisual` natively in the subject's colour, with Back/Next for `frames`.
 - `GameEffects.swift`: confetti / feedback / haptic style effects.
 
 ## Where logic lives

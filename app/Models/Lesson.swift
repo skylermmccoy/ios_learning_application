@@ -8,13 +8,28 @@ struct LessonSource: Decodable, Hashable {
     var link: URL? { url.flatMap(URL.init(string:)) }
 }
 
-/// One swipeable card. At least one of `body`, `code`, `bullets` is set.
+/// One swipeable card. At least one of `body`, `code`, `bullets`, `visual` is set.
 struct TeachingCard: Decodable, Hashable {
     let title: String
     let body: String?
     /// Shown in a monospaced block: Python, or a small trace.
     let code: String?
     let bullets: [String]?
+    /// A diagram drawn by the app. Most cards have one.
+    let visual: CardVisual?
+
+    private enum CodingKeys: String, CodingKey { case title, body, code, bullets, visual }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        title = try c.decode(String.self, forKey: .title)
+        body = try c.decodeIfPresent(String.self, forKey: .body)
+        code = try c.decodeIfPresent(String.self, forKey: .code)
+        bullets = try c.decodeIfPresent([String].self, forKey: .bullets)
+        // A visual this version can't read is dropped rather than losing the whole lesson file.
+        // The test `lessonVisualsAreValid` makes sure none are dropped in the shipped file.
+        visual = try? c.decodeIfPresent(CardVisual.self, forKey: .visual)
+    }
 }
 
 /// Teaches one topic of one subject. Questions point at it with their `topic`.

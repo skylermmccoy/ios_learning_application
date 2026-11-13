@@ -86,6 +86,13 @@ struct TeachView: View {
                 .animation(.snappy, value: page)
             }
             .background(Color(.systemGroupedBackground))
+            #if DEBUG
+            .task {
+                // Dev shortcut: `-card 3` opens on the third card.
+                let n = UserDefaults.standard.integer(forKey: "card")
+                if n > 0 { page = min(n - 1, pages.count - 1) }
+            }
+            #endif
             .navigationTitle(notes.count == 1 ? notes[0].title : "Lesson")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -218,6 +225,10 @@ private struct CardPage: View {
                         .font(.body)
                         .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if let visual = card.visual {
+                    CardVisualView(visual: visual, color: subject.color)
                 }
 
                 if let code = card.code {
