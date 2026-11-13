@@ -31,12 +31,13 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] iPad / wide-screen layout check (sidebar adaptable tab bar is already in place).
 
 ### Features
-- [ ] Algorithm visualizations in Learn (step through sorting/searching on a small array).
+- [ ] Interactive algorithm playground in Learn: the learner enters their own array and steps through a sort or search (teaching cards already have fixed step-throughs).
 - [ ] Per-subject stats screen (accuracy over time, mastered count).
 - [ ] Import/export of user-created questions (JSON share sheet).
 - [ ] Local notifications for due reviews and streak reminders.
 
 ## Done
+- [x] Visuals on teaching cards: 12 diagram types drawn natively from `lessons.json`, including `frames` step-throughs (sorting passes, binary search narrowing, DP tables filling, handshakes). Added to every subject that has notes; checked by `validate_lessons.py` and the `lessonVisualsAreValid` test.
 - [x] Seven new subjects with teaching notes and original questions from the owner's books: Claude Shannon & Information (*A Mind at Play*), Network Protocols and Servers & Services (CCNA Vol. 1), Circuits, Electronic Components and Digital Logic (*Practical Electronics for Inventors*), and SQL (W3Schools and SQLite docs). 56 notes, 201 questions.
 - [x] Teaching lessons for the 7 algorithm subjects: swipeable cards before each lesson, written from *Grokking Algorithms* (Code Design from the Python docs and W3Schools), questions tagged by topic, lessons named after what they teach, "Review the lesson" after a wrong answer, plus new questions on the book's topics.
 - [x] Learn tab redesign: Continue card, totals, category chips, subject grid; path screen with a trail between levels, unit cards and a level preview sheet; question prompt card in quizzes.
