@@ -1,6 +1,6 @@
 # iOS Learning Application
 
-A SwiftUI study app that turns learning into a game. Short quizzes, a Duolingo-style learning path per subject, spaced-repetition reviews, XP, streaks and combos. It ships with **978 built-in questions across 38 subjects**, with a heavy focus on **algorithms**, and lets you add your own.
+A SwiftUI study app that turns learning into a game. Short quizzes, a Duolingo-style learning path per subject, spaced-repetition reviews, XP, streaks and combos. It ships with **1,038 built-in questions across 38 subjects**, with a heavy focus on **algorithms**, and lets you add your own.
 
 > Status: early / actively developed. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
@@ -9,7 +9,7 @@ A SwiftUI study app that turns learning into a game. Short quizzes, a Duolingo-s
 | Tab | What it does |
 | --- | --- |
 | **Today** | Daily Challenge (5 mixed questions, same set all day, builds a streak), questions due for review, XP / level, and your weakest subjects. |
-| **Learn** | A Continue card, your totals, and a grid of subjects by category. Each subject opens a path in three units (Foundations, Core, Advanced). Lessons of 5 questions, a timed review after each unit, and a timed mastery challenge at the end. Tap a level to preview it; lessons in the algorithm subjects teach first with swipeable cards, most with a diagram or a tap-through animation (based on *Grokking Algorithms* and other sources), then quiz you. 1–3 stars based on hearts left. |
+| **Learn** | A Continue card, your totals, and a grid of subjects by category. Each subject opens a path in three units (Foundations, Core, Advanced). Lessons of 5 questions, a timed review after each unit, and a timed mastery challenge at the end. Tap a level to preview it; lessons in subjects that have teaching notes (algorithms, networking, electronics, SQL, Scrum, Nmap and more) teach first with swipeable cards, most with a diagram or a tap-through animation (based on *Grokking Algorithms* and other sources), then quiz you. 1–3 stars based on hearts left. |
 | **Practice** | Free practice and 10-question Timed Tests, by subject or by question format. |
 | **My Stuff** | Questions you created, history of attempts, and weak spots. |
 

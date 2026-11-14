@@ -24,7 +24,7 @@ struct StarterQuestion: Decodable {
 
 enum QuestionBank {
     /// Bump this when starter_questions.json changes so installed apps reload it.
-    static let seedVersion = 9
+    static let seedVersion = 10
 
     static func loadStarter(bundle: Bundle = .main) throws -> [StarterQuestion] {
         guard let url = bundle.url(forResource: "starter_questions", withExtension: "json") else {
