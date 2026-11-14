@@ -5,7 +5,7 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 ## Next up
 
 ### Teaching lessons from the owner's books (`references/`, see `docs/LESSON_FORMAT.md`)
-- [ ] Security: teaching notes + questions for Security Basics, Nmap, Metasploit, Netcat from NIST SP 800-115 and the Penetration Testing Handbook.
+- [ ] Security: teaching notes + questions for Security Basics, Metasploit, Netcat from NIST SP 800-115 and the Penetration Testing Handbook (Nmap is done).
 - [ ] Web application security (new subject) from The Web Application Hacker's Handbook.
 - [ ] Networking, CCNA Vol. 2 topics (NAT, NTP, SNMP, syslog, FTP/TFTP in depth) once the owner adds Volume 2; the current file is Vol. 1 only.
 - [ ] CompTIA A+ Core 1 and Core 2 (new subjects): original questions on the objectives the practice-test books cover; never reuse their questions.
@@ -18,7 +18,6 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] Code Design: TypeScript variants alongside Python (add a `typescript` subject or tag; (needs owner) which).
 
 ### Certifications and history (from `qustions.txt`)
-- [ ] Scrum Master: expand to ≥ 30 questions across roles, events, artifacts, values.
 - [ ] CompTIA Security+: expand to ≥ 40 questions across the current exam domains.
 - [ ] AWS and Azure: expand to ≥ 25 each (fundamentals-level services, shared responsibility, pricing models).
 - [ ] Computer History: Bell Labs, Claude Shannon, Apple, Microsoft, Linux, IBM; ≥ 6 questions each.
@@ -37,6 +36,7 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] Local notifications for due reviews and streak reminders.
 
 ## Done
+- [x] Scrum Master and Nmap: 8 teaching notes each with visuals, and 60 new questions (Scrum 41 from the 2020 Scrum Guide; Nmap 39 from NIST SP 800-115, the Penetration Testing Handbook and the official Nmap reference).
 - [x] Visuals on teaching cards: 12 diagram types drawn natively from `lessons.json`, including `frames` step-throughs (sorting passes, binary search narrowing, DP tables filling, handshakes). Added to every subject that has notes; checked by `validate_lessons.py` and the `lessonVisualsAreValid` test.
 - [x] Seven new subjects with teaching notes and original questions from the owner's books: Claude Shannon & Information (*A Mind at Play*), Network Protocols and Servers & Services (CCNA Vol. 1), Circuits, Electronic Components and Digital Logic (*Practical Electronics for Inventors*), and SQL (W3Schools and SQLite docs). 56 notes, 201 questions.
 - [x] Teaching lessons for the 7 algorithm subjects: swipeable cards before each lesson, written from *Grokking Algorithms* (Code Design from the Python docs and W3Schools), questions tagged by topic, lessons named after what they teach, "Review the lesson" after a wrong answer, plus new questions on the book's topics.
