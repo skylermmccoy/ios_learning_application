@@ -11,7 +11,7 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] CompTIA A+ Core 1 and Core 2 (new subjects): original questions on the objectives the practice-test books cover; never reuse their questions.
 - [ ] Computer engineering: op-amps, filters, timers, power supplies, microcontrollers (Practical Electronics ch. 8–13).
 - [ ] Machine learning (new subject) from Machine Learning with PyTorch and Scikit-Learn.
-- [ ] Teaching notes for the remaining subjects (homework languages other than Prolog and Racket, critical thinking, certifications).
+- [ ] Teaching notes for the remaining subjects (homework languages other than Prolog and Racket, critical thinking, certifications). Drafts for Logic, Java, Bash, Zsh and Parsing are ready in `build/new_lessons/` and pass `merge_lessons.py --check`.
 
 ### Algorithms (top priority)
 - [ ] Audit current algorithm coverage (Big O 49, Sorting 55, Searching 48, Graphs 52, Data Structures 30, Recursion & DP 27, Code Design 30) against the Educative "must-know algorithms" list in `qustions.txt`; write the gap list to `docs/CONTENT_GAPS.md`.
@@ -36,6 +36,8 @@ Claude works top-down through **Next up**, ticking items as they ship. Add items
 - [ ] Local notifications for due reviews and streak reminders.
 
 ## Done
+- [x] Reviews: at most 10 a day, random order fixed for the day (questions waiting 2+ days first), and review gaps spread over the week (1–3 days, then 2–3 days).
+- [x] Discrete Math: 10 teaching notes with visuals (57 cards, from Rosen's *Discrete Mathematics and Its Applications*, 8th ed.) and 19 new questions (31 → 50); every question tagged with a topic.
 - [x] Prolog and Racket: teaching notes with visuals (Prolog 9, Racket 10) and 31 new questions (Prolog 26 → 42, Racket 50 → 65). Racket snippets were run in Racket 9.3; Prolog was checked by hand and against a small model interpreter, not in SWI-Prolog.
 - [x] Scrum Master and Nmap: 8 teaching notes each with visuals, and 60 new questions (Scrum 41 from the 2020 Scrum Guide; Nmap 39 from NIST SP 800-115, the Penetration Testing Handbook and the official Nmap reference).
 - [x] Visuals on teaching cards: 12 diagram types drawn natively from `lessons.json`, including `frames` step-throughs (sorting passes, binary search narrowing, DP tables filling, handshakes). Added to every subject that has notes; checked by `validate_lessons.py` and the `lessonVisualsAreValid` test.
