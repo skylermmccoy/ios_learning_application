@@ -51,11 +51,15 @@ A correct answer queues two more reviews inside a week; a wrong answer brings th
 | Event | Result |
 | --- | --- |
 | Wrong | `isMastered = false`, `reviewsLeft = 2`, due tomorrow |
-| First correct (not scheduled) | `reviewsLeft = 2`, due in 2 days |
-| Correct when due | `reviewsLeft -= 1`; if still > 0 due in 3 days, else cleared and `isMastered = true` |
+| First correct (not scheduled) | `reviewsLeft = 2`, due in 1–3 days |
+| Correct when due | `reviewsLeft -= 1`; if still > 0 due 2–3 days later, else cleared and `isMastered = true` |
 | Correct before due | Counted in stats but does not advance the schedule |
 
+The gaps vary per question (a hash of the question and the day), so reviews spread across the week instead of arriving in one batch. Both reviews still land within 6 days of the first correct answer. Answering a due question (right or wrong) sets `lastReviewed`.
+
 `QuestionBank.dueForReview` returns questions whose `nextReview` has passed (oldest first). Dates use `startOfDay`.
+
+**Daily cap.** The Today tab's Review offers `QuestionBank.todaysReviews`: at most `reviewsPerDay` (10) a day, minus the reviews already answered today (`reviewsDone`). Due questions that have waited 2+ days go first, so none is stuck; the rest come in a random order that is fixed for the day. Anything past the cap stays due and is offered on a later day.
 
 ## Streak
 

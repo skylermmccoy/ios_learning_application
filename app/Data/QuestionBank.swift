@@ -92,6 +92,30 @@ enum QuestionBank {
             .sorted { ($0.nextReview ?? .distantFuture) < ($1.nextReview ?? .distantFuture) }
     }
 
+    /// Most reviews offered in one day. Anything beyond waits for a later day.
+    static let reviewsPerDay = 10
+
+    /// How many due reviews were answered today.
+    static func reviewsDone(from all: [Question], on date: Date = .now, calendar: Calendar = .current) -> Int {
+        all.filter { $0.lastReviewed.map { calendar.isDate($0, inSameDayAs: date) } ?? false }.count
+    }
+
+    /// Today's review set: due questions, at most `limit` per day counting reviews already done.
+    /// Questions waiting 2+ days go first so none is stuck; the rest come in a random order fixed for the day.
+    static func todaysReviews(from all: [Question], now: Date = .now, calendar: Calendar = .current,
+                              limit: Int = reviewsPerDay) -> [Question] {
+        let left = max(0, limit - reviewsDone(from: all, on: now, calendar: calendar))
+        let today = calendar.startOfDay(for: now)
+        let stale = calendar.date(byAdding: .day, value: -2, to: today)!
+        let day = today.formatted(.iso8601.year().month().day())
+        func waiting(_ q: Question) -> Bool { (q.nextReview ?? .distantFuture) <= stale }
+        let ordered = dueForReview(from: all, now: now).sorted {
+            if waiting($0) != waiting($1) { return waiting($0) }
+            return stableHash(day + $0.bankKey) < stableHash(day + $1.bankKey)
+        }
+        return Array(ordered.prefix(left))
+    }
+
     /// FNV-1a. Swift's hashValue changes every launch, so we can't use it for a daily seed.
     static func stableHash(_ s: String) -> UInt64 {
         var h: UInt64 = 0xcbf29ce484222325

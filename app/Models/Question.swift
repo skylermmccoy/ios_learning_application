@@ -69,10 +69,13 @@ final class Question {
     var createdAt: Date
 
     // Review schedule. A correct answer queues two more reviews within a week
-    // (2 days later, then 3 days after that). A wrong answer brings it back tomorrow.
+    // (1–3 days later, then 2–3 days after that, varying per question so reviews
+    // spread over the week). A wrong answer brings it back tomorrow.
     /// When this question is next due. nil = not scheduled.
     var nextReview: Date?
     var reviewsLeft: Int = 0
+    /// When this question was last answered as a due review. Counts toward the daily review cap.
+    var lastReviewed: Date?
     /// true once both follow-up reviews were answered correctly.
     var isMastered: Bool = false
 
@@ -138,7 +141,13 @@ final class Question {
     func recordAnswer(correct: Bool, now: Date = .now, calendar: Calendar = .current) {
         let today = calendar.startOfDay(for: now)
         func inDays(_ n: Int) -> Date { calendar.date(byAdding: .day, value: n, to: today)! }
+        // Each question gets its own gap, fixed for the day, so reviews don't all land together.
+        func spread(_ days: ClosedRange<Int>) -> Int {
+            let seed = bankKey + today.formatted(.iso8601.year().month().day())
+            return days.lowerBound + Int(QuestionBank.stableHash(seed) % UInt64(days.count))
+        }
         if correct { timesCorrect += 1 } else { timesWrong += 1 }
+        if let due = nextReview, due <= now { lastReviewed = now }
 
         guard correct else {
             isMastered = false
@@ -150,14 +159,14 @@ final class Question {
             guard due <= now else { return }   // answered early: doesn't count as a review
             reviewsLeft -= 1
             if reviewsLeft > 0 {
-                nextReview = inDays(3)
+                nextReview = inDays(spread(2...3))
             } else {
                 nextReview = nil
                 isMastered = true
             }
         } else if !isMastered {
             reviewsLeft = 2
-            nextReview = inDays(2)
+            nextReview = inDays(spread(1...3))
         }
     }
 
