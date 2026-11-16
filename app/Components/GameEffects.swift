@@ -16,7 +16,8 @@ final class Sound {
     private init() {
         try? AVAudioSession.sharedInstance().setCategory(.ambient)
         engine.attach(player)
-        engine.connect(player, to: engine.mainMixerNode, format: format)
+        // If this fails, play() just stays silent (the engine won't start without a connected graph).
+        try? engine.connectNode(player, to: engine.mainMixerNode, format: format)
         buffers[.correct] = tone([(660, 0.08), (880, 0.14)])
         buffers[.wrong] = tone([(196, 0.22)])
         buffers[.tick] = tone([(1200, 0.04)])
@@ -32,7 +33,7 @@ final class Sound {
             guard (try? engine.start()) != nil else { return }
         }
         player.scheduleBuffer(buffer, at: nil, options: .interrupts)
-        if !player.isPlaying { player.play() }
+        if !player.isPlaying { try? player.playAudio() }
     }
 
     /// Sine notes back to back, each with a quick fade in/out to avoid clicks.
