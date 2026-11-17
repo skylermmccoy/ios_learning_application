@@ -48,24 +48,69 @@ struct appTests {
         func day(_ n: Int) -> Date { cal.date(byAdding: .day, value: n, to: day0)! }
         let q = Question(subject: .logic, prompt: "p", explanation: "")
 
+        func daysUntilDue(from start: Int) -> Int {
+            (start...(start + 7)).first { !QuestionBank.dueForReview(from: [q], now: day($0)).isEmpty }! - start
+        }
+
         q.recordAnswer(correct: true, now: day0)                 // first correct answer
         #expect(q.reviewsLeft == 2)
-        #expect(QuestionBank.dueForReview(from: [q], now: day(1)).isEmpty)
-        #expect(QuestionBank.dueForReview(from: [q], now: day(2)).count == 1)
+        #expect(QuestionBank.dueForReview(from: [q], now: day0).isEmpty)
+        let first = daysUntilDue(from: 0)
+        #expect((1...3).contains(first))
 
-        q.recordAnswer(correct: true, now: day(1))               // too early: doesn't count
-        #expect(q.reviewsLeft == 2)
+        if first > 1 {
+            q.recordAnswer(correct: true, now: day(first - 1))   // too early: doesn't count
+            #expect(q.reviewsLeft == 2 && q.lastReviewed == nil)
+        }
 
-        q.recordAnswer(correct: true, now: day(2))               // review 1
-        #expect(q.reviewsLeft == 1)
-        #expect(QuestionBank.dueForReview(from: [q], now: day(5)).count == 1)
+        q.recordAnswer(correct: true, now: day(first))           // review 1
+        #expect(q.reviewsLeft == 1 && q.lastReviewed == day(first))
+        let second = daysUntilDue(from: first)
+        #expect((2...3).contains(second))
+        #expect(first + second <= 6)                             // both reviews inside the week
 
-        q.recordAnswer(correct: true, now: day(5))               // review 2, inside the week
+        q.recordAnswer(correct: true, now: day(first + second))  // review 2
         #expect(q.isMastered && q.nextReview == nil)
 
         q.recordAnswer(correct: false, now: day(6))              // a miss restarts it tomorrow
         #expect(!q.isMastered && q.reviewsLeft == 2)
         #expect(QuestionBank.dueForReview(from: [q], now: day(7)).count == 1)
+    }
+
+    @Test func reviewsAreCappedRandomizedAndSpread() {
+        let cal = Calendar.current
+        let day0 = cal.date(from: DateComponents(year: 2026, month: 11, day: 2, hour: 9))!
+        func day(_ n: Int) -> Date { cal.date(byAdding: .day, value: n, to: day0)! }
+
+        // First reviews of 60 questions answered on the same day land on different days.
+        let fresh = (0..<60).map { Question(subject: .logic, prompt: "s\($0)", explanation: "") }
+        fresh.forEach { $0.recordAnswer(correct: true, now: day0) }
+        let gaps = Set(fresh.map { cal.dateComponents([.day], from: cal.startOfDay(for: day0), to: $0.nextReview!).day! })
+        #expect(gaps.isSubset(of: [1, 2, 3]) && gaps.count >= 2)
+
+        // 25 due today: only 10 are offered, in an order that depends on the day.
+        let qs = (0..<25).map { i -> Question in
+            let q = Question(subject: .logic, prompt: "r\(i)", explanation: "")
+            q.reviewsLeft = 2
+            q.nextReview = cal.startOfDay(for: day(5))
+            return q
+        }
+        let today = QuestionBank.todaysReviews(from: qs, now: day(5))
+        #expect(today.count == QuestionBank.reviewsPerDay)
+        #expect(today.map(\.prompt) == QuestionBank.todaysReviews(from: qs, now: day(5)).map(\.prompt))
+        #expect(today.map(\.prompt) != qs.prefix(10).map(\.prompt))
+
+        // Answering 4 of them leaves 6 for today, even though 21 are still due.
+        today.prefix(4).forEach { $0.recordAnswer(correct: true, now: day(5)) }
+        #expect(QuestionBank.reviewsDone(from: qs, on: day(5)) == 4)
+        #expect(QuestionBank.todaysReviews(from: qs, now: day(5)).count == 6)
+        #expect(QuestionBank.dueForReview(from: qs, now: day(5)).count == 21)
+
+        // A question that has waited 2+ days goes ahead of the random order.
+        let old = Question(subject: .logic, prompt: "old", explanation: "")
+        old.reviewsLeft = 2
+        old.nextReview = cal.startOfDay(for: day(2))
+        #expect(QuestionBank.todaysReviews(from: qs + [old], now: day(5)).first === old)
     }
 
     @Test func pathHasUnitsReviewsAndMastery() {

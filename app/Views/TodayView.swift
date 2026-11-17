@@ -141,21 +141,29 @@ struct TodayView: View {
     }
 
     /// Questions you got right come back twice within a week. Misses come back tomorrow.
+    /// At most `QuestionBank.reviewsPerDay` a day; the rest wait for a later day.
     private var reviewCard: some View {
-        let due = QuestionBank.dueForReview(from: questions)
+        let due = QuestionBank.todaysReviews(from: questions)
+        let waiting = QuestionBank.dueForReview(from: questions).count - due.count
+        let done = QuestionBank.reviewsDone(from: questions)
         let scheduled = questions.filter { $0.nextReview != nil }.count
+        let subtitle: String
+        if !due.isEmpty {
+            subtitle = waiting > 0 ? "\(waiting) more will wait for later days" : "Revisit what you learned so it sticks"
+        } else if done > 0 {
+            subtitle = "Done for today: \(done) reviewed. More tomorrow"
+        } else {
+            subtitle = scheduled == 0 ? "Answer questions to build your review queue"
+                                      : "Nothing due today. \(scheduled) scheduled this week"
+        }
         return Button {
-            session = QuizSession(title: "Review", questions: Array(due.prefix(15)),
-                                  mode: .practice, subject: nil)
+            session = QuizSession(title: "Review", questions: due, mode: .practice, subject: nil)
         } label: {
             HStack(spacing: 14) {
                 IconBadge(icon: "arrow.triangle.2.circlepath", color: due.isEmpty ? .gray : .green, size: 46)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(due.isEmpty ? "Review" : "Review: \(due.count) due").font(.headline)
-                    Text(due.isEmpty
-                         ? (scheduled == 0 ? "Answer questions to build your review queue"
-                                           : "Nothing due today. \(scheduled) scheduled this week")
-                         : "Revisit what you learned so it sticks")
+                    Text(due.isEmpty ? "Review" : "Review: \(due.count) today").font(.headline)
+                    Text(subtitle)
                         .font(.subheadline).foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                 }
